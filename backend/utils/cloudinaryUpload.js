@@ -1,0 +1,37 @@
+const streamifier = require("streamifier");
+const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
+
+const uploadBufferToCloudinary = (file, folder, options = {}) =>
+  new Promise((resolve, reject) => {
+    if (!file?.buffer) {
+      return reject(new Error("Upload file buffer is missing"));
+    }
+
+    if (!isCloudinaryConfigured()) {
+      return reject(
+        new Error("Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.")
+      );
+    }
+
+    const publicIdBase = file.originalname
+      .replace(/\.[^.]+$/, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "")
+      .slice(0, 60);
+
+    const uploadOptions = {
+      folder: `vijesh-portfolio/${folder}`,
+      resource_type: "auto",
+      public_id: `${Date.now()}-${publicIdBase || "upload"}`,
+      ...options
+    };
+
+    const uploadStream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+      if (error) return reject(error);
+      return resolve(result);
+    });
+
+    streamifier.createReadStream(file.buffer).pipe(uploadStream);
+  });
+
+module.exports = { uploadBufferToCloudinary };

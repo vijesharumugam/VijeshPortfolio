@@ -1,4 +1,5 @@
 const Education = require("../models/Education");
+const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -12,9 +13,13 @@ const getEducation = async (req, res) => {
 };
 
 const createEducation = async (req, res) => {
+  const uploadedLogo = req.file
+    ? await uploadBufferToCloudinary(req.file, "education")
+    : null;
+
   const education = await Education.create({
     institutionName: req.body.institutionName,
-    institutionLogoUrl: req.file ? `/uploads/education/${req.file.filename}` : "",
+    institutionLogoUrl: uploadedLogo?.secure_url || "",
     degree: req.body.degree,
     duration: req.body.duration,
     grade: req.body.grade,
@@ -38,7 +43,8 @@ const updateEducation = async (req, res) => {
   };
 
   if (req.file) {
-    payload.institutionLogoUrl = `/uploads/education/${req.file.filename}`;
+    const uploadedLogo = await uploadBufferToCloudinary(req.file, "education");
+    payload.institutionLogoUrl = uploadedLogo.secure_url;
   }
 
   const education = await Education.findByIdAndUpdate(req.params.id, payload, {

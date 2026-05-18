@@ -1,4 +1,5 @@
 const Certification = require("../models/Certification");
+const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -12,10 +13,14 @@ const getCertifications = async (req, res) => {
 };
 
 const createCertification = async (req, res) => {
+  const uploadedCertificate = req.file
+    ? await uploadBufferToCloudinary(req.file, "certifications")
+    : null;
+
   const certification = await Certification.create({
     title: req.body.title,
     issuer: req.body.issuer,
-    certificateFileUrl: req.file ? `/uploads/certifications/${req.file.filename}` : "",
+    certificateFileUrl: uploadedCertificate?.secure_url || "",
     skillsGained: normalizeList(req.body.skillsGained),
     completionDate: req.body.completionDate
   });
@@ -32,7 +37,8 @@ const updateCertification = async (req, res) => {
   };
 
   if (req.file) {
-    payload.certificateFileUrl = `/uploads/certifications/${req.file.filename}`;
+    const uploadedCertificate = await uploadBufferToCloudinary(req.file, "certifications");
+    payload.certificateFileUrl = uploadedCertificate.secure_url;
   }
 
   const certification = await Certification.findByIdAndUpdate(req.params.id, payload, {

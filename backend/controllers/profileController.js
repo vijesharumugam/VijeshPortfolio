@@ -1,4 +1,5 @@
 const Profile = require("../models/Profile");
+const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
 
 const normalizeList = (input) => {
   if (Array.isArray(input)) {
@@ -60,15 +61,18 @@ const updateProfile = async (req, res) => {
   };
 
   if (req.files?.profileImage?.[0]) {
-    payload.profileImageUrl = `/uploads/profile/${req.files.profileImage[0].filename}`;
+    const uploadedProfileImage = await uploadBufferToCloudinary(req.files.profileImage[0], "profile");
+    payload.profileImageUrl = uploadedProfileImage.secure_url;
   }
 
   if (req.files?.aboutImage?.[0]) {
-    payload.aboutImageUrl = `/uploads/profile/${req.files.aboutImage[0].filename}`;
+    const uploadedAboutImage = await uploadBufferToCloudinary(req.files.aboutImage[0], "profile");
+    payload.aboutImageUrl = uploadedAboutImage.secure_url;
   }
 
   if (req.files?.resume?.[0]) {
-    payload.resumeUrl = `/uploads/profile/${req.files.resume[0].filename}`;
+    const uploadedResume = await uploadBufferToCloudinary(req.files.resume[0], "profile");
+    payload.resumeUrl = uploadedResume.secure_url;
   }
 
   const profile = await Profile.findOneAndUpdate(

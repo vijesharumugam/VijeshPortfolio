@@ -1,25 +1,4 @@
-const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
-
-const createDirectory = (dirPath) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-};
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const folder = req.uploadFolder || "misc";
-    const destinationPath = path.join(__dirname, "..", "public", "uploads", folder);
-    createDirectory(destinationPath);
-    cb(null, destinationPath);
-  },
-  filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/\s+/g, "-").replace(/[^\w.-]/g, "");
-    cb(null, `${Date.now()}-${safeName}`);
-  }
-});
 
 const fileFilter = (req, file, cb) => {
   const allowed = [
@@ -38,7 +17,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }
 });

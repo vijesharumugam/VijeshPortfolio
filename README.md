@@ -8,7 +8,7 @@ Modern responsive personal portfolio for a fresher in Data Science, AI, and Soft
 - Backend: Node.js, Express.js
 - Database: MongoDB Atlas
 - Auth: JWT admin login
-- Uploads: Multer for images and PDF files
+- Uploads: Multer + Cloudinary for images and PDF files
 
 ## Features
 
@@ -61,6 +61,9 @@ Create `.env` from `.env.example` and update:
 - `MONGODB_URI`
 - `JWT_SECRET`
 - `CLIENT_URL`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 - optionally `ADMIN_PASSWORD_HASH` if you want a bcrypt hash instead of plain `ADMIN_PASSWORD`
 
 Run the API:
@@ -106,6 +109,39 @@ Change these in production through backend environment variables.
 4. Copy the connection string.
 5. Paste it into `MONGODB_URI` in backend `.env`.
 6. Start the backend once. The app seeds starter portfolio data automatically if the collections are empty.
+
+## Cloudinary Setup
+
+1. Create an account at Cloudinary.
+2. Open the Cloudinary dashboard.
+3. Copy these values:
+   - `Cloud name`
+   - `API Key`
+   - `API Secret`
+4. Put them into backend `.env`:
+
+```env
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+5. Restart the backend.
+6. Check:
+
+```text
+http://127.0.0.1:5000/api/health
+```
+
+You should see:
+
+```json
+{
+  "message": "Portfolio API running",
+  "databaseConnected": true,
+  "cloudinaryConfigured": true
+}
+```
 
 ## API Overview
 
@@ -164,7 +200,7 @@ Authorization: Bearer <jwt_token>
    - `CLIENT_URL` set to your Netlify/Vercel frontend URL
 6. Deploy.
 
-Note: local file uploads on free hosting are usually ephemeral. For production persistence, replace the current upload storage with Cloudinary, S3, or another object store.
+Note: this project is configured to upload admin media to Cloudinary. The seeded default demo assets still come from the local `/uploads/defaults` folder.
 
 ### Backend on Railway
 
@@ -178,7 +214,6 @@ Note: local file uploads on free hosting are usually ephemeral. For production p
 
 - Replace the default admin password before going live.
 - Prefer `ADMIN_PASSWORD_HASH` for production.
-- Replace local upload storage with cloud storage if you need persistent uploaded files.
 - Update seeded placeholder links, email, phone number, and social URLs from the admin dashboard.
 - Upload your real resume PDF, profile photo, project screenshots, and certificates after first login.
 

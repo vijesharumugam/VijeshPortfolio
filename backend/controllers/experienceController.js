@@ -1,4 +1,5 @@
 const Experience = require("../models/Experience");
+const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -12,9 +13,13 @@ const getExperiences = async (req, res) => {
 };
 
 const createExperience = async (req, res) => {
+  const uploadedLogo = req.file
+    ? await uploadBufferToCloudinary(req.file, "experience")
+    : null;
+
   const experience = await Experience.create({
     companyName: req.body.companyName,
-    companyLogoUrl: req.file ? `/uploads/experience/${req.file.filename}` : "",
+    companyLogoUrl: uploadedLogo?.secure_url || "",
     role: req.body.role,
     duration: req.body.duration,
     location: req.body.location,
@@ -38,7 +43,8 @@ const updateExperience = async (req, res) => {
   };
 
   if (req.file) {
-    payload.companyLogoUrl = `/uploads/experience/${req.file.filename}`;
+    const uploadedLogo = await uploadBufferToCloudinary(req.file, "experience");
+    payload.companyLogoUrl = uploadedLogo.secure_url;
   }
 
   const experience = await Experience.findByIdAndUpdate(req.params.id, payload, {

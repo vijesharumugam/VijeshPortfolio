@@ -1,4 +1,5 @@
 const Project = require("../models/Project");
+const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -13,6 +14,10 @@ const getProjects = async (req, res) => {
 
 const createProject = async (req, res) => {
   const files = req.files || [];
+  const uploadedImages = await Promise.all(
+    files.map((file) => uploadBufferToCloudinary(file, "projects"))
+  );
+
   const project = await Project.create({
     title: req.body.title,
     description: req.body.description,
@@ -21,7 +26,7 @@ const createProject = async (req, res) => {
     githubUrl: req.body.githubUrl,
     liveUrl: req.body.liveUrl,
     status: req.body.status || "Completed",
-    images: files.map((file) => `/uploads/projects/${file.filename}`),
+    images: uploadedImages.map((image) => image.secure_url),
     order: Number(req.body.order || 0)
   });
 
@@ -32,7 +37,10 @@ const updateProject = async (req, res) => {
   const existingProject = await Project.findById(req.params.id);
   const files = req.files || [];
   const retainedImages = normalizeList(req.body.existingImages);
-  const newImagePaths = files.map((file) => `/uploads/projects/${file.filename}`);
+  const uploadedImages = await Promise.all(
+    files.map((file) => uploadBufferToCloudinary(file, "projects"))
+  );
+  const newImagePaths = uploadedImages.map((image) => image.secure_url);
 
   const payload = {
     title: req.body.title,

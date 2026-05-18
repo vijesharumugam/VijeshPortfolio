@@ -5,6 +5,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const { connectDB, isDatabaseConnected } = require("./config/db");
+const { isCloudinaryConfigured } = require("./config/cloudinary");
 const seedDefaultData = require("./utils/seed");
 
 const authRoutes = require("./routes/authRoutes");
@@ -74,7 +75,8 @@ app.get("/", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({
     message: "Portfolio API running",
-    databaseConnected: isDatabaseConnected()
+    databaseConnected: isDatabaseConnected(),
+    cloudinaryConfigured: isCloudinaryConfigured()
   });
 });
 
