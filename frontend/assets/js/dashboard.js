@@ -15,6 +15,7 @@ const state = {
 const forms = {};
 const authToken = localStorage.getItem("portfolioAdminToken");
 const themeToggle = document.getElementById("adminThemeToggle");
+const ADMIN_LOGIN_PATH = "/edit/";
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupTheme();
@@ -48,7 +49,7 @@ function bindConnectionLabels() {
 
 async function verifySession() {
   if (!authToken) {
-    window.location.href = "../";
+    window.location.href = ADMIN_LOGIN_PATH;
     return false;
   }
 
@@ -59,14 +60,14 @@ async function verifySession() {
 
     if (!response.ok) {
       localStorage.removeItem("portfolioAdminToken");
-      window.location.href = "../";
+      window.location.href = ADMIN_LOGIN_PATH;
       return false;
     }
 
     return true;
   } catch (error) {
     localStorage.removeItem("portfolioAdminToken");
-    window.location.href = "../";
+    window.location.href = ADMIN_LOGIN_PATH;
     return false;
   }
 }
@@ -85,7 +86,7 @@ function setupNavigation() {
 
     if (button.dataset.target === "logout") {
       localStorage.removeItem("portfolioAdminToken");
-      window.location.href = "../";
+      window.location.href = ADMIN_LOGIN_PATH;
       return;
     }
 

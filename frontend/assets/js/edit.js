@@ -4,6 +4,8 @@ const loginForm = document.getElementById("loginForm");
 const toastContainer = document.getElementById("toastContainer");
 const apiRootLabel = document.getElementById("apiRootLabel");
 const themeToggle = document.getElementById("adminThemeToggle");
+const ADMIN_LOGIN_PATH = "/edit/";
+const ADMIN_DASHBOARD_PATH = "/edit/dashboard/";
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTheme();
@@ -29,7 +31,7 @@ loginForm.addEventListener("submit", async (event) => {
     if (!response.ok) throw new Error(result.message || "Login failed");
 
     localStorage.setItem("portfolioAdminToken", result.token);
-    window.location.href = "dashboard/";
+    window.location.href = ADMIN_DASHBOARD_PATH;
   } catch (error) {
     showToast(error.message || "Unable to login", "error");
   }
@@ -45,7 +47,7 @@ async function verifyExistingSession() {
     });
 
     if (response.ok) {
-      window.location.href = "dashboard/";
+      window.location.href = ADMIN_DASHBOARD_PATH;
       return;
     }
 
