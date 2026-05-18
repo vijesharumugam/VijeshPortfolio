@@ -701,6 +701,7 @@ button {
   top: 1rem;
   right: 1rem;
   background: rgba(8, 17, 31, 0.75);
+  color: #fff;
 }
 
 .project-body,
@@ -712,6 +713,29 @@ button {
   display: flex;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+body[data-theme="light"] .status-badge {
+  background: rgba(255, 255, 255, 0.96);
+  color: #13203a;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  box-shadow: 0 10px 24px rgba(57, 81, 125, 0.12);
+}
+
+body[data-theme="light"] .project-body p {
+  color: #52637f;
+}
+
+body[data-theme="light"] .project-body .btn-secondary,
+body[data-theme="light"] .project-body .btn-ghost {
+  background: rgba(15, 23, 42, 0.06);
+  color: #13203a;
+  border-color: rgba(15, 23, 42, 0.16);
+}
+
+body[data-theme="light"] .project-body .btn-secondary:hover,
+body[data-theme="light"] .project-body .btn-ghost:hover {
+  background: rgba(15, 23, 42, 0.1);
 }
 
 .cert-issuer {
