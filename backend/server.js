@@ -20,13 +20,28 @@ const messageRoutes = require("./routes/messageRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const normalizeOrigin = (value) => {
+  if (!value) return "";
+  return value.trim().replace(/\/+$/, "");
+};
+
 const buildAllowedOrigins = () => {
-  const configuredOrigins = (process.env.CLIENT_URL || "")
+  const configuredOrigins = [
+    process.env.CLIENT_URL || "",
+    process.env.FRONTEND_URL || "",
+    process.env.VERCEL_FRONTEND_URL || ""
+  ]
+    .join(",")
     .split(",")
-    .map((item) => item.trim())
+    .map(normalizeOrigin)
     .filter(Boolean);
 
-  const defaults = ["http://127.0.0.1:5500", "http://localhost:5500"];
+  const defaults = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "https://vijesh-portfolio.vercel.app"
+  ].map(normalizeOrigin);
+
   return [...new Set([...configuredOrigins, ...defaults])];
 };
 
@@ -46,19 +61,25 @@ const bootstrapDatabase = async () => {
 
 bootstrapDatabase();
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = buildAllowedOrigins();
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = buildAllowedOrigins();
+    const normalizedOrigin = normalizeOrigin(origin);
 
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    if (!origin || allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
     }
-  })
-);
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -76,7 +97,8 @@ app.get("/api/health", (req, res) => {
   res.json({
     message: "Portfolio API running",
     databaseConnected: isDatabaseConnected(),
-    cloudinaryConfigured: isCloudinaryConfigured()
+    cloudinaryConfigured: isCloudinaryConfigured(),
+    allowedOrigins: buildAllowedOrigins()
   });
 });
 
