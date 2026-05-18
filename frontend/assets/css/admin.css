@@ -13,14 +13,14 @@
 
 body[data-theme="light"] {
   --bg: #eef4ff;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: rgba(255, 255, 255, 0.94);
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: rgba(245, 249, 255, 0.98);
   --text: #13203a;
   --muted: #5a6b86;
   --accent: #167f5d;
   --accent-strong: #315efb;
   --danger: #c84c40;
-  --border: rgba(15, 23, 42, 0.1);
+  --border: rgba(15, 23, 42, 0.14);
   --shadow: 0 24px 70px rgba(57, 81, 125, 0.18);
 }
 
@@ -197,7 +197,9 @@ body[data-theme="light"] .auth-form input,
 body[data-theme="light"] .form-grid input,
 body[data-theme="light"] .form-grid textarea,
 body[data-theme="light"] .form-grid select {
-  background: rgba(15, 23, 42, 0.03);
+  background: rgba(15, 23, 42, 0.035);
+  border-color: rgba(15, 23, 42, 0.16);
+  color: var(--text);
 }
 
 .wide {
@@ -509,7 +511,56 @@ body[data-theme="light"] .btn-danger,
 body[data-theme="light"] .record-card,
 body[data-theme="light"] .sidebar-nav button.active,
 body[data-theme="light"] .sidebar-nav button:hover {
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text);
+  border-color: rgba(15, 23, 42, 0.16);
+}
+
+body[data-theme="light"] .btn-secondary:hover,
+body[data-theme="light"] .btn-ghost:hover,
+body[data-theme="light"] .btn-danger:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .summary-card,
+body[data-theme="light"] .panel-card,
+body[data-theme="light"] .auth-form,
+body[data-theme="light"] .sidebar,
+body[data-theme="light"] .dashboard-topbar,
+body[data-theme="light"] .connection-card,
+body[data-theme="light"] .media-block {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+body[data-theme="light"] .sidebar-nav button {
+  color: #42506b;
+}
+
+body[data-theme="light"] .sidebar-copy,
+body[data-theme="light"] .sidebar-meta,
+body[data-theme="light"] .topbar-copy,
+body[data-theme="light"] .hint,
+body[data-theme="light"] .empty-state,
+body[data-theme="light"] .record-copy p,
+body[data-theme="light"] .record-copy span,
+body[data-theme="light"] .panel-head p {
+  color: #52637f;
+}
+
+body[data-theme="light"] .btn-primary {
+  color: #f7fbff;
+}
+
+body[data-theme="light"] .admin-theme-toggle {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text);
+}
+
+body[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text);
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
 .loading-overlay {
