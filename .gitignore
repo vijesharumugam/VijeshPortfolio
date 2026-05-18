@@ -1,0 +1,7 @@
+backend/node_modules
+backend/.env
+backend/public/uploads/profile
+backend/public/uploads/experience
+backend/public/uploads/education
+backend/public/uploads/projects
+backend/public/uploads/certifications

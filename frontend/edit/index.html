@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | Vijesh Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/admin.css" />
+  </head>
+  <body class="admin-auth-body">
+    <button class="admin-theme-toggle" id="adminThemeToggle" type="button" aria-label="Toggle admin theme">
+      Theme
+    </button>
+    <div class="admin-bg">
+      <span class="admin-orb orb-a"></span>
+      <span class="admin-orb orb-b"></span>
+    </div>
+    <main class="auth-layout">
+      <section class="auth-panel">
+        <div class="auth-copy">
+          <span class="eyebrow">Admin Access</span>
+          <h1>Manage the portfolio content from one editor workspace</h1>
+          <p>
+            Sign in to update hero content, about details, experience, education, projects,
+            certifications, skills, inbox messages, profile assets, and resume files.
+          </p>
+          <div class="connection-card glass-panel">
+            <h3>Local development</h3>
+            <p>Frontend: `http://127.0.0.1:5500` or `http://localhost:5500`</p>
+            <p>Backend API: <span id="apiRootLabel"></span></p>
+          </div>
+        </div>
+        <form id="loginForm" class="auth-form glass-panel">
+          <h2>Admin Login</h2>
+          <label>
+            <span>Username</span>
+            <input type="text" name="username" placeholder="Vijesh" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" placeholder="Enter password" required />
+          </label>
+          <button type="submit" class="btn btn-primary wide">Login</button>
+          <p class="hint">Default configured admin username: Vijesh</p>
+        </form>
+      </section>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/edit.js"></script>
+  </body>
+</html>

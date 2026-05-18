@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard | Vijesh Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+  </head>
+  <body class="dashboard-body">
+    <div class="dashboard-layout">
+      <aside class="sidebar glass-panel">
+        <a href="../../index.html" class="sidebar-brand">Vijesh Panel</a>
+        <p class="sidebar-copy">
+          Section-first editor workspace for portfolio content, assets, and inbox management.
+        </p>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <button data-target="section-dashboard" class="active">Dashboard</button>
+          <button data-target="section-home">Home</button>
+          <button data-target="section-about">About</button>
+          <button data-target="section-experience">Experience</button>
+          <button data-target="section-education">Education</button>
+          <button data-target="section-projects">Projects</button>
+          <button data-target="section-certifications">Certifications</button>
+          <button data-target="section-skills">Skills</button>
+          <button data-target="section-contact">Contact</button>
+          <button data-target="logout">Logout</button>
+        </nav>
+        <div class="sidebar-meta">
+          <p>Frontend: <span id="frontendOriginLabel"></span></p>
+          <p>Backend: <span id="backendOriginLabel"></span></p>
+        </div>
+      </aside>
+
+      <main class="dashboard-main">
+        <header class="dashboard-topbar glass-panel" id="section-top">
+          <div>
+            <p class="eyebrow">Portfolio Admin</p>
+            <h1>Content Management Dashboard</h1>
+            <p class="topbar-copy">
+              Scroll and edit sections in one continuous workspace, similar to a design editor flow.
+            </p>
+          </div>
+          <div class="topbar-actions">
+            <button class="admin-theme-toggle inline" id="adminThemeToggle" type="button" aria-label="Toggle admin theme">
+              Theme
+            </button>
+            <a href="../../index.html" class="btn btn-secondary" target="_blank" rel="noopener">View Site</a>
+          </div>
+        </header>
+
+        <section class="editor-panel" id="section-dashboard">
+          <div class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Overview</p>
+                <h2>Dashboard Summary</h2>
+              </div>
+            </div>
+            <div class="summary-grid" id="summaryGrid"></div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Inbox</p>
+                <h2>Recent Messages</h2>
+              </div>
+            </div>
+            <div id="recentMessages" class="record-list"></div>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-home">
+          <div class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Section 01</p>
+                <h2>Home Editor</h2>
+              </div>
+              <span class="panel-chip">Hero and profile assets</span>
+            </div>
+            <form id="homeForm" class="form-grid">
+              <label><span>Brand Name</span><input type="text" name="brandName" required /></label>
+              <label><span>Full Name</span><input type="text" name="fullName" required /></label>
+              <label class="full"><span>Role / Title</span><input type="text" name="role" required /></label>
+              <label class="full"><span>Typing Roles (comma separated)</span><input type="text" name="typingRoles" /></label>
+              <label class="full"><span>Short Intro</span><textarea name="intro" rows="3" required></textarea></label>
+              <label class="full"><span>Hero Description</span><textarea name="heroDescription" rows="5" required></textarea></label>
+              <label><span>Email</span><input type="email" name="homeEmail" /></label>
+              <label><span>Email Link</span><input type="text" name="homeSocialEmail" placeholder="mailto:you@example.com" /></label>
+              <label><span>GitHub</span><input type="url" name="homeGithub" /></label>
+              <label><span>LinkedIn</span><input type="url" name="homeLinkedin" /></label>
+              <label><span>LeetCode</span><input type="url" name="homeLeetcode" /></label>
+              <label><span>Profile Photo</span><input type="file" name="profileImage" accept="image/*" /></label>
+              <label><span>Resume PDF</span><input type="file" name="resume" accept=".pdf" /></label>
+              <div class="full actions-row">
+                <button type="submit" class="btn btn-primary">Save Home</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-about">
+          <div class="panel-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Section 02</p>
+                <h2>About Editor</h2>
+              </div>
+              <span class="panel-chip">Narrative and strengths</span>
+            </div>
+            <form id="aboutForm" class="form-grid">
+              <label><span>About Image</span><input type="file" name="aboutImage" accept="image/*" /></label>
+              <label class="full"><span>About Description</span><textarea name="aboutDescription" rows="5" required></textarea></label>
+              <label class="full"><span>Career Objective</span><textarea name="careerObjective" rows="4" required></textarea></label>
+              <label class="full"><span>Passions (comma separated)</span><input type="text" name="passions" /></label>
+              <label class="full"><span>Strengths (comma separated)</span><input type="text" name="strengths" /></label>
+              <label class="full"><span>Focus Area Cards (JSON array)</span><textarea name="focusAreas" rows="8"></textarea></label>
+              <label class="full"><span>Hero Stats (JSON array)</span><textarea name="stats" rows="6"></textarea></label>
+              <div class="full actions-row">
+                <button type="submit" class="btn btn-primary">Save About</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-experience">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 03</p>
+                  <h2>Experience Manager</h2>
+                </div>
+                <span class="panel-chip" id="experienceCountChip">0 records</span>
+              </div>
+              <form id="experienceForm" class="form-grid">
+                <input type="hidden" name="id" />
+                <label><span>Company Name</span><input type="text" name="companyName" required /></label>
+                <label><span>Job Role</span><input type="text" name="role" required /></label>
+                <label><span>Duration</span><input type="text" name="duration" required /></label>
+                <label><span>Location</span><input type="text" name="location" /></label>
+                <label><span>Display Order</span><input type="number" name="order" min="0" /></label>
+                <label><span>Company Logo</span><input type="file" name="logo" accept="image/*" /></label>
+                <label class="full"><span>About the Role</span><textarea name="description" rows="4" required></textarea></label>
+                <label class="full"><span>Skills Gained (comma separated)</span><input type="text" name="skillsGained" /></label>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Experience</button>
+                  <button type="button" class="btn btn-ghost" data-reset="experienceForm">Clear</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h2>Existing Experiences</h2></div>
+              <div id="experienceList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-education">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 04</p>
+                  <h2>Education Manager</h2>
+                </div>
+                <span class="panel-chip" id="educationCountChip">0 records</span>
+              </div>
+              <form id="educationForm" class="form-grid">
+                <input type="hidden" name="id" />
+                <label><span>Institution Name</span><input type="text" name="institutionName" required /></label>
+                <label><span>Degree / Course</span><input type="text" name="degree" required /></label>
+                <label><span>Duration</span><input type="text" name="duration" required /></label>
+                <label><span>CGPA / Percentage</span><input type="text" name="grade" /></label>
+                <label><span>Display Order</span><input type="number" name="order" min="0" /></label>
+                <label><span>Institution Logo</span><input type="file" name="logo" accept="image/*" /></label>
+                <label class="full"><span>Description</span><textarea name="description" rows="4" required></textarea></label>
+                <label class="full"><span>Skills Gained (comma separated)</span><input type="text" name="skillsGained" /></label>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Education</button>
+                  <button type="button" class="btn btn-ghost" data-reset="educationForm">Clear</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h2>Existing Education</h2></div>
+              <div id="educationList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-projects">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 05</p>
+                  <h2>Projects Manager</h2>
+                </div>
+                <span class="panel-chip" id="projectCountChip">0 records</span>
+              </div>
+              <form id="projectForm" class="form-grid">
+                <input type="hidden" name="id" />
+                <input type="hidden" name="existingImages" />
+                <label><span>Project Title</span><input type="text" name="title" required /></label>
+                <label><span>Status</span><select name="status"><option>Completed</option><option>Ongoing</option></select></label>
+                <label><span>Display Order</span><input type="number" name="order" min="0" /></label>
+                <label class="full"><span>Description</span><textarea name="description" rows="4" required></textarea></label>
+                <label class="full"><span>Technologies (comma separated)</span><input type="text" name="technologies" /></label>
+                <label class="full"><span>Features (comma separated)</span><input type="text" name="features" /></label>
+                <label><span>GitHub URL</span><input type="url" name="githubUrl" /></label>
+                <label><span>Hosted URL</span><input type="url" name="liveUrl" /></label>
+                <label class="full"><span>Project Images</span><input type="file" name="images" accept="image/*" multiple /></label>
+                <div class="full media-manager">
+                  <div class="media-block">
+                    <div class="media-block-head">
+                      <h3>Current Uploaded Media</h3>
+                      <p>Remove any existing project image before saving.</p>
+                    </div>
+                    <div id="projectExistingMedia" class="media-grid empty-media"></div>
+                  </div>
+                  <div class="media-block">
+                    <div class="media-block-head">
+                      <h3>New Selected Images</h3>
+                      <p>Preview and remove newly selected images before upload.</p>
+                    </div>
+                    <div id="projectNewMedia" class="media-grid empty-media"></div>
+                  </div>
+                </div>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Project</button>
+                  <button type="button" class="btn btn-ghost" data-reset="projectForm">Clear</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h2>Existing Projects</h2></div>
+              <div id="projectList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-certifications">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 06</p>
+                  <h2>Certifications Manager</h2>
+                </div>
+                <span class="panel-chip" id="certificationCountChip">0 records</span>
+              </div>
+              <form id="certificationForm" class="form-grid">
+                <input type="hidden" name="id" />
+                <label><span>Title</span><input type="text" name="title" required /></label>
+                <label><span>Issuing Platform</span><input type="text" name="issuer" required /></label>
+                <label><span>Completion Date</span><input type="date" name="completionDate" required /></label>
+                <label><span>Upload Certificate</span><input type="file" name="certificate" accept="image/*,.pdf" /></label>
+                <label class="full"><span>Skills Gained (comma separated)</span><input type="text" name="skillsGained" /></label>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Certification</button>
+                  <button type="button" class="btn btn-ghost" data-reset="certificationForm">Clear</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h2>Existing Certifications</h2></div>
+              <div id="certificationList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-skills">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 07</p>
+                  <h2>Skills Manager</h2>
+                </div>
+                <span class="panel-chip" id="skillCountChip">0 groups</span>
+              </div>
+              <form id="skillForm" class="form-grid">
+                <input type="hidden" name="id" />
+                <label><span>Category</span><input type="text" name="category" required /></label>
+                <label><span>Display Order</span><input type="number" name="order" min="0" /></label>
+                <label class="full">
+                  <span>Skills JSON</span>
+                  <textarea
+                    name="skills"
+                    rows="8"
+                    placeholder='[{"name":"Python","level":90},{"name":"SQL","level":80}]'
+                  ></textarea>
+                </label>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Skill Category</button>
+                  <button type="button" class="btn btn-ghost" data-reset="skillForm">Clear</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h2>Existing Skill Categories</h2></div>
+              <div id="skillList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="editor-panel" id="section-contact">
+          <div class="editor-grid">
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Section 08</p>
+                  <h2>Contact Editor</h2>
+                </div>
+                <span class="panel-chip">Links and inbox</span>
+              </div>
+              <form id="contactForm" class="form-grid">
+                <label><span>Email</span><input type="email" name="email" required /></label>
+                <label><span>Phone</span><input type="text" name="phone" required /></label>
+                <label><span>Location</span><input type="text" name="location" required /></label>
+                <label><span>GitHub</span><input type="url" name="github" /></label>
+                <label><span>LinkedIn</span><input type="url" name="linkedin" /></label>
+                <label><span>LeetCode</span><input type="url" name="leetcode" /></label>
+                <label><span>Social Email Link</span><input type="text" name="socialEmail" /></label>
+                <label class="full"><span>Contact Description</span><textarea name="contactDescription" rows="4" required></textarea></label>
+                <div class="full actions-row">
+                  <button type="submit" class="btn btn-primary">Save Contact</button>
+                </div>
+              </form>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="panel-kicker">Inbox</p>
+                  <h2>Messages</h2>
+                </div>
+                <span class="panel-chip" id="messageCountChip">0 messages</span>
+              </div>
+              <div id="messageList" class="record-list"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/dashboard.js"></script>
+  </body>
+</html>

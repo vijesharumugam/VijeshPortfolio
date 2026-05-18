@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560">
+  <rect width="800" height="560" rx="32" fill="#101522" />
+  <rect x="34" y="34" width="732" height="492" rx="24" fill="#ffffff" opacity="0.06" />
+  <text x="400" y="155" text-anchor="middle" fill="#73e0a9" font-size="42" font-family="Arial">Certificate of Completion</text>
+  <text x="400" y="248" text-anchor="middle" fill="#ffffff" font-size="30" font-family="Arial">Sample Verified Credential</text>
+  <text x="400" y="310" text-anchor="middle" fill="#c8d1e4" font-size="20" font-family="Arial">Upload PNG, JPG, or PDF through the admin dashboard</text>
+  <line x1="180" y1="390" x2="620" y2="390" stroke="#ffc46b" stroke-width="4" />
+  <text x="400" y="438" text-anchor="middle" fill="#ffc46b" font-size="24" font-family="Arial">Portfolio Starter Asset</text>
+</svg>

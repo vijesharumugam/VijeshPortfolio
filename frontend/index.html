@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Vijesh portfolio showcasing data science, AI, analytics, and software development projects."
+    />
+    <title>Vijesh | Data Science & AI Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="page-loader" id="pageLoader">
+      <div class="loader-ring"></div>
+      <p>Loading portfolio experience...</p>
+    </div>
+
+    <div class="bg-layer">
+      <span class="orb orb-one"></span>
+      <span class="orb orb-two"></span>
+      <span class="orb orb-three"></span>
+      <div class="particle-grid"></div>
+    </div>
+
+    <header class="site-header glass">
+      <div class="container nav-shell">
+        <a href="#home" class="brand" id="brandName">Vijesh</a>
+        <nav class="nav-menu" id="navMenu">
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#experience">Experience</a>
+          <a href="#education">Education</a>
+          <a href="#projects">Projects</a>
+          <a href="#certifications">Certifications</a>
+          <a href="#skills">Skills</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <span class="theme-icon">◐</span>
+          </button>
+          <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="section hero-section">
+        <div class="container hero-grid">
+          <div class="hero-copy" data-reveal>
+            <span class="eyebrow">Open to internships and entry-level roles</span>
+            <h1 id="heroName">Vijesh</h1>
+            <p class="hero-role" id="heroRole">Aspiring Data Scientist | AI Enthusiast | Developer</p>
+            <div class="typing-shell">
+              <span>I build as a </span>
+              <span class="typing-text" id="typingText"></span>
+            </div>
+            <p class="hero-intro" id="heroIntro"></p>
+            <p class="hero-description" id="heroDescription"></p>
+            <div class="hero-actions">
+              <a href="#" class="btn btn-primary" id="resumeButton" target="_blank" rel="noopener"
+                >Download Resume</a
+              >
+              <a href="#contact" class="btn btn-secondary">Contact Me</a>
+            </div>
+            <div class="social-links" id="socialLinks"></div>
+          </div>
+
+          <div class="hero-visual" data-reveal>
+            <div class="profile-card glass">
+              <div class="profile-frame">
+                <img id="profileImage" src="" alt="Profile portrait" />
+              </div>
+              <div class="floating-badge badge-ai">AI & ML</div>
+              <div class="floating-badge badge-data">Data Analytics</div>
+              <div class="floating-badge badge-web">Web Dev</div>
+            </div>
+            <div class="stats-row" id="heroStats"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">About Me</span>
+            <h2>Blending analytical thinking with practical product building</h2>
+            <p>
+              A fresher portfolio focused on AI, data, and software execution with a clean and
+              professional visual identity.
+            </p>
+          </div>
+          <div class="about-grid">
+            <div class="about-visual glass" data-reveal>
+              <img id="aboutImage" src="" alt="About portrait" />
+            </div>
+            <div class="about-copy" data-reveal>
+              <p id="aboutDescription"></p>
+              <div class="about-block">
+                <h3>Career Objective</h3>
+                <p id="careerObjective"></p>
+              </div>
+              <div class="about-split">
+                <div class="about-block">
+                  <h3>Passion & Interests</h3>
+                  <div class="chip-list" id="passionsList"></div>
+                </div>
+                <div class="about-block">
+                  <h3>Technical Strengths</h3>
+                  <div class="chip-list" id="strengthsList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="focus-grid" id="focusGrid"></div>
+        </div>
+      </section>
+
+      <section id="experience" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">Experience</span>
+            <h2>Early experience shaped by hands-on execution</h2>
+          </div>
+          <div class="timeline" id="experienceTimeline"></div>
+        </div>
+      </section>
+
+      <section id="education" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">Education</span>
+            <h2>Academic foundation with a strong practical bias</h2>
+          </div>
+          <div class="timeline" id="educationTimeline"></div>
+        </div>
+      </section>
+
+      <section id="projects" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">Projects</span>
+            <h2>Selected work across AI, analytics, and web development</h2>
+          </div>
+          <div class="projects-grid" id="projectsGrid"></div>
+        </div>
+      </section>
+
+      <section id="certifications" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">Certifications</span>
+            <h2>Continuous learning backed by verified coursework</h2>
+          </div>
+          <div class="certification-grid" id="certificationGrid"></div>
+        </div>
+      </section>
+
+      <section id="skills" class="section">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="eyebrow">Skills</span>
+            <h2>Technical stack organized by capability</h2>
+          </div>
+          <div class="skills-grid" id="skillsGrid"></div>
+        </div>
+      </section>
+
+      <section id="contact" class="section">
+        <div class="container contact-grid">
+          <div class="contact-copy" data-reveal>
+            <span class="eyebrow">Contact</span>
+            <h2>Let’s build something useful together</h2>
+            <p id="contactDescription"></p>
+            <div class="contact-cards">
+              <article class="contact-card glass">
+                <h3>Email</h3>
+                <a id="contactEmail" href="#"></a>
+              </article>
+              <article class="contact-card glass">
+                <h3>Phone</h3>
+                <a id="contactPhone" href="#"></a>
+              </article>
+              <article class="contact-card glass">
+                <h3>Location</h3>
+                <p id="contactLocation"></p>
+              </article>
+            </div>
+          </div>
+          <form class="contact-form glass" id="contactForm" data-reveal>
+            <h3>Send a message</h3>
+            <label>
+              <span>Name</span>
+              <input type="text" name="name" placeholder="Your name" required />
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" placeholder="you@example.com" required />
+            </label>
+            <label>
+              <span>Subject</span>
+              <input type="text" name="subject" placeholder="Opportunity / Project / Query" required />
+            </label>
+            <label>
+              <span>Message</span>
+              <textarea name="message" rows="5" placeholder="Tell me about your idea..." required></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-shell">
+        <div>
+          <p class="footer-brand" id="footerName">Vijesh</p>
+          <p>Built with HTML, CSS, JavaScript, Node.js, Express, and MongoDB Atlas.</p>
+        </div>
+      </div>
+    </footer>
+
+    <div class="modal" id="projectModal">
+      <div class="modal-dialog glass">
+        <button class="modal-close" id="modalClose" aria-label="Close modal">×</button>
+        <div class="modal-carousel">
+          <button class="carousel-nav" id="carouselPrev" aria-label="Previous image">‹</button>
+          <img id="modalImage" src="" alt="Project preview" />
+          <button class="carousel-nav" id="carouselNext" aria-label="Next image">›</button>
+        </div>
+        <div class="modal-content">
+          <div class="modal-headline">
+            <h3 id="modalTitle"></h3>
+            <span class="status-badge" id="modalStatus"></span>
+          </div>
+          <p id="modalDescription"></p>
+          <div class="modal-meta">
+            <div>
+              <h4>Technologies</h4>
+              <div class="chip-list" id="modalTech"></div>
+            </div>
+            <div>
+              <h4>Features</h4>
+              <ul id="modalFeatures"></ul>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <a id="modalGithub" class="btn btn-secondary" href="#" target="_blank" rel="noopener">GitHub</a>
+            <a id="modalLive" class="btn btn-primary" href="#" target="_blank" rel="noopener">Live Demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>
