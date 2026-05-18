@@ -15,6 +15,9 @@ const state = {
 const forms = {};
 const authToken = localStorage.getItem("portfolioAdminToken");
 const themeToggle = document.getElementById("adminThemeToggle");
+const saveLoadingOverlay = document.getElementById("saveLoadingOverlay");
+const loadingTitle = document.getElementById("loadingTitle");
+const loadingText = document.getElementById("loadingText");
 const ADMIN_LOGIN_PATH = "/edit/";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -382,6 +385,7 @@ function renderMessages() {
 
 async function saveProfileSection(event) {
   event.preventDefault();
+  const form = event.currentTarget;
 
   if (!isValidJson(forms.about.elements.focusAreas.value) || !isValidJson(forms.about.elements.stats.value)) {
     showToast("Focus areas and stats must be valid JSON arrays", "error");
@@ -427,6 +431,7 @@ async function saveProfileSection(event) {
   if (resume) formData.append("resume", resume);
   if (aboutImage) formData.append("aboutImage", aboutImage);
 
+  setSavingState(true, "Saving profile and uploading media...", form);
   try {
     await apiRequest("/profile", { method: "PUT", body: formData, isFormData: true });
     showToast("Profile section updated", "success");
@@ -436,6 +441,8 @@ async function saveProfileSection(event) {
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to update profile", "error");
+  } finally {
+    setSavingState(false, "", form);
   }
 }
 
@@ -444,6 +451,7 @@ async function saveCollectionItem(event, resource, form) {
   const formData = new FormData(form);
   const id = form.elements.id.value;
 
+  setSavingState(true, "Saving content...", form);
   try {
     await apiRequest(`/${resource}${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
@@ -457,6 +465,8 @@ async function saveCollectionItem(event, resource, form) {
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to save record", "error");
+  } finally {
+    setSavingState(false, "", form);
   }
 }
 
@@ -465,6 +475,7 @@ async function saveProject(event) {
   const form = forms.project;
   const id = form.elements.id.value;
   const formData = new FormData();
+  const hasNewFiles = state.projectNewFiles.length > 0;
 
   [
     "id",
@@ -487,6 +498,7 @@ async function saveProject(event) {
     formData.append("images", file);
   });
 
+  setSavingState(true, hasNewFiles ? "Uploading project images..." : "Saving project...", form);
   try {
     await apiRequest(`/projects${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
@@ -501,6 +513,8 @@ async function saveProject(event) {
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to save project", "error");
+  } finally {
+    setSavingState(false, "", form);
   }
 }
 
@@ -520,6 +534,7 @@ async function saveSkillCategory(event) {
     skills: form.elements.skills.value
   };
 
+  setSavingState(true, "Saving skill category...", form);
   try {
     await apiRequest(`/skills${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
@@ -531,6 +546,8 @@ async function saveSkillCategory(event) {
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to save skill category", "error");
+  } finally {
+    setSavingState(false, "", form);
   }
 }
 
@@ -778,6 +795,39 @@ function showToast(message, type = "info") {
   toast.textContent = message;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 2800);
+}
+
+function setSavingState(isSaving, message, form) {
+  if (saveLoadingOverlay) {
+    saveLoadingOverlay.classList.toggle("open", isSaving);
+    saveLoadingOverlay.setAttribute("aria-hidden", String(!isSaving));
+  }
+
+  if (loadingTitle) {
+    loadingTitle.textContent = isSaving ? "Saving changes" : "Saving complete";
+  }
+
+  if (loadingText && message) {
+    loadingText.textContent = message;
+  } else if (loadingText && !isSaving) {
+    loadingText.textContent = "Please wait while the updates are processed.";
+  }
+
+  if (!form) return;
+
+  form.querySelectorAll("input, textarea, select, button").forEach((element) => {
+    if (element === themeToggle) return;
+    if (isSaving) {
+      element.dataset.prevDisabled = element.disabled ? "true" : "false";
+      element.disabled = true;
+      return;
+    }
+
+    if (element.dataset.prevDisabled === "false") {
+      element.disabled = false;
+    }
+    delete element.dataset.prevDisabled;
+  });
 }
 
 function setupTheme() {
