@@ -1,6 +1,14 @@
 const streamifier = require("streamifier");
 const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
 
+const getResourceType = (file) => {
+  if (file?.mimetype === "application/pdf") {
+    return "raw";
+  }
+
+  return "image";
+};
+
 const uploadBufferToCloudinary = (file, folder, options = {}) =>
   new Promise((resolve, reject) => {
     if (!file?.buffer) {
@@ -21,7 +29,7 @@ const uploadBufferToCloudinary = (file, folder, options = {}) =>
 
     const uploadOptions = {
       folder: `vijesh-portfolio/${folder}`,
-      resource_type: "auto",
+      resource_type: getResourceType(file),
       public_id: `${Date.now()}-${publicIdBase || "upload"}`,
       ...options
     };
