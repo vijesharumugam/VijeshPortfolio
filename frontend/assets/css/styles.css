@@ -393,11 +393,13 @@ button {
 
 .hero-visual {
   position: relative;
+  max-width: 460px;
+  margin-inline: auto;
 }
 
 .profile-card {
   position: relative;
-  min-height: 580px;
+  min-height: 500px;
   padding: 1rem;
   border-radius: 2rem;
 }
@@ -1027,7 +1029,7 @@ button {
   }
 
   .profile-card {
-    min-height: 440px;
+    min-height: 400px;
   }
 }
 

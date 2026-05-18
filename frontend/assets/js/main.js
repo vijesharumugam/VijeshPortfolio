@@ -135,7 +135,10 @@ function renderProfile() {
   dom.profileImage.alt = `${profile.fullName} profile photo`;
   dom.aboutImage.src = toAbsoluteUrl(profile.aboutImageUrl || profile.profileImageUrl);
   dom.aboutImage.alt = `${profile.fullName} about photo`;
-  dom.resumeButton.href = profile.resumeUrl ? toAbsoluteUrl(profile.resumeUrl) : "#contact";
+  dom.resumeButton.href = profile.resumeUrl
+    ? buildResumeDownloadUrl(profile.resumeUrl, profile.fullName)
+    : "#contact";
+  dom.resumeButton.setAttribute("download", buildResumeFileName(profile.fullName));
   dom.contactDescription.textContent = profile.contactDescription;
   dom.contactEmail.textContent = profile.email;
   dom.contactEmail.href = `mailto:${profile.email}`;
@@ -619,6 +622,26 @@ function filePreview(filePath) {
   return filePath.endsWith(".pdf")
     ? toAbsoluteUrl("/uploads/defaults/certificate-sample.svg")
     : toAbsoluteUrl(filePath);
+}
+
+function buildResumeDownloadUrl(path, fullName) {
+  const absoluteUrl = toAbsoluteUrl(path);
+  const filename = buildResumeFileName(fullName);
+
+  if (absoluteUrl.includes("/raw/upload/")) {
+    return absoluteUrl.replace("/raw/upload/", `/raw/upload/fl_attachment:${filename}/`);
+  }
+
+  return absoluteUrl;
+}
+
+function buildResumeFileName(fullName) {
+  const safeName = String(fullName || "Resume")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]/g, "");
+
+  return `${safeName || "Resume"}-Resume.pdf`;
 }
 
 function toAbsoluteUrl(path) {
