@@ -63,7 +63,6 @@ function cacheDom() {
     certModalClose: document.getElementById("certModalClose"),
     certViewer: document.getElementById("certViewer"),
     certViewerMeta: document.getElementById("certViewerMeta"),
-    certViewerLink: document.getElementById("certViewerLink"),
     projectModal: document.getElementById("projectModal"),
     modalClose: document.getElementById("modalClose"),
     modalImage: document.getElementById("modalImage"),
@@ -586,13 +585,13 @@ function openCertModal(cert) {
   const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
 
   if (isPdf) {
-    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
     dom.certViewer.innerHTML = `
-      <iframe 
-        src="${escapeHtml(googleViewerUrl)}" 
+      <embed 
+        src="${escapeHtml(fileUrl)}" 
+        type="application/pdf"
         class="cert-full-image" 
         style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
-      ></iframe>
+      />
     `;
   } else {
     dom.certViewer.innerHTML = `
@@ -611,10 +610,6 @@ function openCertModal(cert) {
     <p>${formatDate(cert.completionDate)}</p>
   `;
 
-  // "Open Full View" — for Cloudinary images open in new tab, same for others
-  dom.certViewerLink.href = fileUrl;
-  dom.certViewerLink.target = "_blank";
-  dom.certViewerLink.rel = "noopener";
   dom.certModal.classList.add("open");
   document.body.classList.add("modal-open");
 }
