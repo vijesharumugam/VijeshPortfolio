@@ -357,9 +357,12 @@ function renderCertifications() {
       if (hasFile) {
         if (!isPdf) {
           previewSrc = fileUrl;
-        } else if (fileUrl.includes("res.cloudinary.com") && fileUrl.includes("/image/upload/")) {
-          // Cloudinary automatically generates rasterized thumbnails for PDFs if requested as .jpg!
-          previewSrc = fileUrl.replace(/\.pdf$/i, ".jpg");
+        } else if (fileUrl.includes("res.cloudinary.com") && fileUrl.includes("/upload/")) {
+          // Force Cloudinary to extract the 1st page of the PDF as a JPG thumbnail
+          previewSrc = fileUrl
+            .replace("/raw/upload/", "/image/upload/")
+            .replace("/upload/", "/upload/pg_1/")
+            .replace(/\.pdf$/i, ".jpg");
         }
       }
 
@@ -583,9 +586,10 @@ function openCertModal(cert) {
   const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
 
   if (isPdf) {
+    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
     dom.certViewer.innerHTML = `
       <iframe 
-        src="${escapeHtml(fileUrl)}" 
+        src="${escapeHtml(googleViewerUrl)}" 
         class="cert-full-image" 
         style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
       ></iframe>
