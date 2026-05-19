@@ -356,9 +356,6 @@ function renderCertifications() {
       // Use inline SVG for placeholder — avoids cross-origin img request to backend
       const previewSrc = (hasFile && !isPdf) ? fileUrl : CERT_PLACEHOLDER_SVG;
 
-      // URL used for the PDF download link — Cloudinary raw gets fl_attachment
-      const pdfActionUrl = isPdf ? certFileViewUrl(fileUrl) : "";
-
       return `
         <article class="cert-card glass" data-reveal>
           <div class="cert-preview ${hasFile && !isPdf ? "cert-preview-clickable" : ""}" ${hasFile && !isPdf ? `data-cert-view="${escapeHtml(certification._id)}"` : ""}>
@@ -375,8 +372,8 @@ function renderCertifications() {
             <div class="chip-list">${renderChips(certification.skillsGained || [])}</div>
             ${hasFile
               ? isPdf
-                // PDF — force download via Cloudinary fl_attachment; fallback opens new tab
-                ? `<a class="btn btn-secondary" href="${escapeHtml(pdfActionUrl)}" target="_blank" rel="noopener" ${pdfActionUrl.includes("fl_attachment") ? `download` : ""}>Download Certificate</a>`
+                // PDF — open in new tab
+                ? `<a class="btn btn-secondary" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">View Certificate</a>`
                 // Image — open in modal viewer
                 : `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
               : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
@@ -722,21 +719,6 @@ function filePreview(filePath) {
     return CERT_PLACEHOLDER_SVG;
   }
   return url;
-}
-
-/**
- * Returns the best URL to use for opening/downloading a certificate PDF.
- * - Cloudinary raw PDFs  → injects fl_attachment so the browser downloads
- *   instead of trying to render (which causes "Failed to load PDF document")
- * - All other PDF URLs   → return as-is, opened in a new tab
- */
-function certFileViewUrl(absoluteFileUrl) {
-  if (absoluteFileUrl.includes("res.cloudinary.com") && absoluteFileUrl.includes("/raw/upload/")) {
-    // Force download via Cloudinary transformation
-    return absoluteFileUrl.replace("/raw/upload/", "/raw/upload/fl_attachment/");
-  }
-  // Non-Cloudinary PDF (e.g. local backend file) — just open in new tab
-  return absoluteFileUrl;
 }
 
 function buildResumeDownloadUrl(path, fullName) {

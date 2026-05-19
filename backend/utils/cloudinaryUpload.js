@@ -2,11 +2,7 @@ const streamifier = require("streamifier");
 const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
 
 const getResourceType = (file) => {
-  if (file?.mimetype === "application/pdf") {
-    return "raw";
-  }
-
-  return "image";
+  return "auto";
 };
 
 const buildPublicId = (file) => {
