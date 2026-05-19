@@ -3,6 +3,8 @@ const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
 
 const { connectDB, isDatabaseConnected } = require("./config/db");
 const { isCloudinaryConfigured } = require("./config/cloudinary");
@@ -81,8 +83,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); // Allow images from Cloudinary
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize());
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 

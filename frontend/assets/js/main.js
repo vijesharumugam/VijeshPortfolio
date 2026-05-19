@@ -353,16 +353,24 @@ function renderCertifications() {
         : false;
       const hasFile = Boolean(certification.certificateFileUrl);
 
-      // Use inline SVG for placeholder — avoids cross-origin img request to backend
-      const previewSrc = (hasFile && !isPdf) ? fileUrl : CERT_PLACEHOLDER_SVG;
+      let previewSrc = CERT_PLACEHOLDER_SVG;
+      if (hasFile) {
+        if (!isPdf) {
+          previewSrc = fileUrl;
+        } else if (fileUrl.includes("res.cloudinary.com") && fileUrl.includes("/image/upload/")) {
+          // Cloudinary automatically generates rasterized thumbnails for PDFs if requested as .jpg!
+          previewSrc = fileUrl.replace(/\.pdf$/i, ".jpg");
+        }
+      }
 
       return `
         <article class="cert-card glass" data-reveal>
-          <div class="cert-preview ${hasFile && !isPdf ? "cert-preview-clickable" : ""}" ${hasFile && !isPdf ? `data-cert-view="${escapeHtml(certification._id)}"` : ""}>
+          <div class="cert-preview cert-preview-clickable" ${hasFile ? `data-cert-view="${escapeHtml(certification._id)}"` : ""}>
             ${isPdf && hasFile ? `<span class="cert-pdf-badge">PDF</span>` : ""}
             <img
               src="${escapeHtml(previewSrc)}"
               alt="${escapeHtml(certification.title)} certificate"
+              onerror="this.src=window.CERT_PLACEHOLDER_SVG"
             />
           </div>
           <div class="cert-body">
@@ -371,11 +379,7 @@ function renderCertifications() {
             <p>${formatDate(certification.completionDate)}</p>
             <div class="chip-list">${renderChips(certification.skillsGained || [])}</div>
             ${hasFile
-              ? isPdf
-                // PDF — open in new tab
-                ? `<a class="btn btn-secondary" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">View Certificate</a>`
-                // Image — open in modal viewer
-                : `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
+              ? `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
               : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
             }
           </div>
@@ -576,16 +580,26 @@ function setupCertModal() {
 
 function openCertModal(cert) {
   const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
+  const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
 
-  // Handle image load errors gracefully — fall back to the placeholder
-  dom.certViewer.innerHTML = `
-    <img
-      src="${escapeHtml(fileUrl)}"
-      alt="${escapeHtml(cert.title)} certificate"
-      class="cert-full-image"
-      onerror="this.src=window.CERT_PLACEHOLDER_SVG"
-    />
-  `;
+  if (isPdf) {
+    dom.certViewer.innerHTML = `
+      <iframe 
+        src="${escapeHtml(fileUrl)}" 
+        class="cert-full-image" 
+        style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
+      ></iframe>
+    `;
+  } else {
+    dom.certViewer.innerHTML = `
+      <img
+        src="${escapeHtml(fileUrl)}"
+        alt="${escapeHtml(cert.title)} certificate"
+        class="cert-full-image"
+        onerror="this.src=window.CERT_PLACEHOLDER_SVG"
+      />
+    `;
+  }
 
   dom.certViewerMeta.innerHTML = `
     <p class="cert-issuer">${escapeHtml(cert.issuer)}</p>
@@ -776,4 +790,41 @@ function showToast(message, type = "info") {
     toast.classList.remove("visible");
     setTimeout(() => toast.remove(), 240);
   }, 2800);
+}
+
+function setupContactForm() {
+  if (!dom.contactForm) return;
+
+  dom.contactForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const button = dom.contactForm.querySelector("button[type='submit']");
+    const originalText = button.textContent;
+    button.textContent = "Sending...";
+    button.disabled = true;
+
+    try {
+      const formData = new FormData(dom.contactForm);
+      const payload = Object.fromEntries(formData.entries());
+
+      const response = await fetch(`${API_BASE}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json().catch(() => ({ message: "Failed to send message" }));
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send message");
+      }
+
+      showToast("Message sent successfully!", "success");
+      dom.contactForm.reset();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      button.textContent = originalText;
+      button.disabled = false;
+    }
+  });
 }
