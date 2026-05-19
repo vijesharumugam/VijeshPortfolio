@@ -1,47 +1,21 @@
 %PDF-1.4
 1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
+<</Type /Catalog /Pages 2 0 R>>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+<</Type /Pages /Kids [3 0 R] /Count 1>>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
-endobj
-4 0 obj
-<< /Length 309 >>
-stream
-BT
-/F1 22 Tf
-72 720 Td
-(Vijesh Kumar - Resume Placeholder) Tj
-/F1 12 Tf
-0 -40 Td
-(Replace this file from the admin dashboard with your latest PDF resume.) Tj
-0 -28 Td
-(Recommended details:) Tj
-0 -24 Td
-(- Education, projects, skills, internships, certifications, and contact links) Tj
-0 -24 Td
-(- Tailor the final resume for Data Science, AI, or Software Developer roles) Tj
-0 -24 Td
-(This starter file exists so the Download Resume button works immediately.) Tj
-ET
-endstream
-endobj
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+<</Type /Page /MediaBox [0 0 595 842] /Parent 2 0 R /Resources<<>>>>
 endobj
 xref
-0 6
+0 4
 0000000000 65535 f 
-0000000010 00000 n 
-0000000063 00000 n 
-0000000122 00000 n 
-0000000250 00000 n 
-0000000610 00000 n 
+0000000009 00000 n 
+0000000056 00000 n 
+0000000111 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<</Size 4 /Root 1 0 R>>
 startxref
-680
+195
 %%EOF

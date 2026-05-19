@@ -18,6 +18,11 @@ const createMessage = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "All contact form fields are required" });
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
   const savedMessage = await Message.create({ name, email, subject, message });
   res.status(201).json({ message: "Message sent successfully", savedMessage });
 });
@@ -47,8 +52,9 @@ const deleteMessage = asyncHandler(async (req, res) => {
 });
 
 const getDashboardSummary = asyncHandler(async (req, res) => {
-  const [messages, experiences, education, projects, certifications, skills] = await Promise.all([
+  const [messages, unreadMessages, experiences, education, projects, certifications, skills] = await Promise.all([
     Message.countDocuments(),
+    Message.countDocuments({ isRead: false }),
     Experience.countDocuments(),
     Education.countDocuments(),
     Project.countDocuments(),
@@ -67,7 +73,8 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       { label: "Certifications", value: certifications },
       { label: "Skill Groups", value: skills }
     ],
-    recentMessages
+    recentMessages,
+    unreadMessages
   });
 });
 

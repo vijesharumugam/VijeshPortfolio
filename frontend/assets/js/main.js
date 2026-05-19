@@ -81,21 +81,25 @@ function cacheDom() {
 
 async function loadPortfolio() {
   try {
+    const fetchWithFallback = async (endpoint, fallback) => {
+      try { return await fetchJson(endpoint); } catch (e) { console.error(`Failed to fetch ${endpoint}`, e); return fallback; }
+    };
+
     const [profile, experiences, education, projects, certifications, skills] = await Promise.all([
-      fetchJson("/profile"),
-      fetchJson("/experiences"),
-      fetchJson("/education"),
-      fetchJson("/projects"),
-      fetchJson("/certifications"),
-      fetchJson("/skills")
+      fetchWithFallback("/profile", null),
+      fetchWithFallback("/experiences", []),
+      fetchWithFallback("/education", []),
+      fetchWithFallback("/projects", []),
+      fetchWithFallback("/certifications", []),
+      fetchWithFallback("/skills", [])
     ]);
 
     state.profile = profile;
-    state.experiences = experiences;
-    state.education = education;
-    state.projects = projects;
-    state.certifications = certifications;
-    state.skills = skills;
+    state.experiences = experiences || [];
+    state.education = education || [];
+    state.projects = projects || [];
+    state.certifications = certifications || [];
+    state.skills = skills || [];
 
     renderPortfolio();
     hideLoader();
@@ -141,16 +145,29 @@ function renderProfile() {
   dom.profileImage.alt = `${profile.fullName} profile photo`;
   dom.aboutImage.src = toAbsoluteUrl(profile.aboutImageUrl || profile.profileImageUrl);
   dom.aboutImage.alt = `${profile.fullName} about photo`;
-  dom.resumeButton.href = profile.resumeUrl
-    ? buildResumeDownloadUrl(profile.resumeUrl, profile.fullName)
-    : "#contact";
-  dom.resumeButton.setAttribute("download", buildResumeFileName(profile.fullName));
+  if (profile.resumeUrl && profile.resumeUrl.includes("res.cloudinary.com")) {
+    // Cloudinary raw PDF — inject fl_attachment to force browser download
+    dom.resumeButton.href = buildResumeDownloadUrl(profile.resumeUrl, profile.fullName);
+    dom.resumeButton.setAttribute("download", buildResumeFileName(profile.fullName));
+    dom.resumeButton.removeAttribute("target");
+  } else if (profile.resumeUrl) {
+    // Local / backend-hosted file — cross-origin download attribute is ignored,
+    // so open in new tab to let the browser render/download natively
+    dom.resumeButton.href = toAbsoluteUrl(profile.resumeUrl);
+    dom.resumeButton.setAttribute("target", "_blank");
+    dom.resumeButton.setAttribute("rel", "noopener");
+    dom.resumeButton.removeAttribute("download");
+  } else {
+    dom.resumeButton.href = "#contact";
+    dom.resumeButton.removeAttribute("download");
+    dom.resumeButton.removeAttribute("target");
+  }
   dom.contactDescription.textContent = profile.contactDescription;
   dom.contactEmail.textContent = profile.email;
   dom.contactEmail.href = `mailto:${profile.email}`;
-  dom.contactPhone.textContent = profile.phone;
-  dom.contactPhone.href = `tel:${profile.phone.replace(/\s+/g, "")}`;
-  dom.contactLocation.textContent = profile.location;
+  dom.contactPhone.textContent = profile.phone || "";
+  dom.contactPhone.href = `tel:${(profile.phone || "").replace(/\s+/g, "")}`;
+  dom.contactLocation.textContent = profile.location || "";
 
   const socials = [
     { label: "GitHub", url: profile.socialLinks?.github, symbol: "GH" },
@@ -322,15 +339,25 @@ function renderProjects() {
   startProjectSlideshows();
 }
 
+// Inline SVG used as cert placeholder — no cross-origin backend request needed
+const CERT_PLACEHOLDER_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 560'%3E%3Crect width='800' height='560' rx='32' fill='%23101522'/%3E%3Crect x='34' y='34' width='732' height='492' rx='24' fill='%23ffffff' opacity='.06'/%3E%3Ctext x='400' y='200' text-anchor='middle' fill='%2373e0a9' font-size='38' font-family='Arial'%3ECertificate%3C/text%3E%3Ctext x='400' y='310' text-anchor='middle' fill='%23c8d1e4' font-size='18' font-family='Arial'%3EUpload via admin dashboard%3C/text%3E%3Cline x1='180' y1='390' x2='620' y2='390' stroke='%23ffc46b' stroke-width='3'/%3E%3C/svg%3E`;
+window.CERT_PLACEHOLDER_SVG = CERT_PLACEHOLDER_SVG;
+
 function renderCertifications() {
   dom.certificationGrid.innerHTML = state.certifications
     .map((certification) => {
       const fileUrl = toAbsoluteUrl(certification.certificateFileUrl);
-      const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
+      const isPdf = certification.certificateFileUrl
+        ? (certification.certificateFileUrl.endsWith(".pdf") ||
+           fileUrl.includes("/raw/upload/"))
+        : false;
       const hasFile = Boolean(certification.certificateFileUrl);
-      const previewSrc = isPdf
-        ? toAbsoluteUrl("/uploads/defaults/certificate-sample.svg")
-        : (hasFile ? fileUrl : toAbsoluteUrl("/uploads/defaults/certificate-sample.svg"));
+
+      // Use inline SVG for placeholder — avoids cross-origin img request to backend
+      const previewSrc = (hasFile && !isPdf) ? fileUrl : CERT_PLACEHOLDER_SVG;
+
+      // URL used for the PDF download link — Cloudinary raw gets fl_attachment
+      const pdfActionUrl = isPdf ? certFileViewUrl(fileUrl) : "";
 
       return `
         <article class="cert-card glass" data-reveal>
@@ -348,7 +375,9 @@ function renderCertifications() {
             <div class="chip-list">${renderChips(certification.skillsGained || [])}</div>
             ${hasFile
               ? isPdf
-                ? `<a class="btn btn-secondary" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">View PDF Certificate</a>`
+                // PDF — force download via Cloudinary fl_attachment; fallback opens new tab
+                ? `<a class="btn btn-secondary" href="${escapeHtml(pdfActionUrl)}" target="_blank" rel="noopener" ${pdfActionUrl.includes("fl_attachment") ? `download` : ""}>Download Certificate</a>`
+                // Image — open in modal viewer
                 : `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
               : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
             }
@@ -551,11 +580,13 @@ function setupCertModal() {
 function openCertModal(cert) {
   const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
 
+  // Handle image load errors gracefully — fall back to the placeholder
   dom.certViewer.innerHTML = `
     <img
       src="${escapeHtml(fileUrl)}"
       alt="${escapeHtml(cert.title)} certificate"
       class="cert-full-image"
+      onerror="this.src=window.CERT_PLACEHOLDER_SVG"
     />
   `;
 
@@ -565,7 +596,10 @@ function openCertModal(cert) {
     <p>${formatDate(cert.completionDate)}</p>
   `;
 
+  // "Open Full View" — for Cloudinary images open in new tab, same for others
   dom.certViewerLink.href = fileUrl;
+  dom.certViewerLink.target = "_blank";
+  dom.certViewerLink.rel = "noopener";
   dom.certModal.classList.add("open");
   document.body.classList.add("modal-open");
 }
@@ -682,13 +716,27 @@ function iconSymbol(iconName) {
 }
 
 function filePreview(filePath) {
-  if (!filePath) return toAbsoluteUrl("/uploads/defaults/certificate-sample.svg");
+  if (!filePath) return CERT_PLACEHOLDER_SVG;
   const url = toAbsoluteUrl(filePath);
-  // PDFs and raw Cloudinary uploads show a certificate placeholder thumbnail
   if (filePath.endsWith(".pdf") || filePath.includes("/raw/upload/")) {
-    return toAbsoluteUrl("/uploads/defaults/certificate-sample.svg");
+    return CERT_PLACEHOLDER_SVG;
   }
   return url;
+}
+
+/**
+ * Returns the best URL to use for opening/downloading a certificate PDF.
+ * - Cloudinary raw PDFs  → injects fl_attachment so the browser downloads
+ *   instead of trying to render (which causes "Failed to load PDF document")
+ * - All other PDF URLs   → return as-is, opened in a new tab
+ */
+function certFileViewUrl(absoluteFileUrl) {
+  if (absoluteFileUrl.includes("res.cloudinary.com") && absoluteFileUrl.includes("/raw/upload/")) {
+    // Force download via Cloudinary transformation
+    return absoluteFileUrl.replace("/raw/upload/", "/raw/upload/fl_attachment/");
+  }
+  // Non-Cloudinary PDF (e.g. local backend file) — just open in new tab
+  return absoluteFileUrl;
 }
 
 function buildResumeDownloadUrl(path, fullName) {

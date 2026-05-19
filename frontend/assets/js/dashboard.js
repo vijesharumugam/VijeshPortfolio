@@ -303,7 +303,9 @@ function renderCountChips() {
   setText("projectCountChip", `${state.projects.length} records`);
   setText("certificationCountChip", `${state.certifications.length} records`);
   setText("skillCountChip", `${state.skills.length} groups`);
-  setText("messageCountChip", `${state.messages.length} messages`);
+  
+  const unreadCount = state.messages.filter(m => !m.isRead).length;
+  setText("messageCountChip", `${unreadCount} unread / ${state.messages.length} total`);
 }
 
 function renderRecordList(containerId, items, config) {
@@ -435,9 +437,6 @@ async function saveProfileSection(event) {
   try {
     await apiRequest("/profile", { method: "PUT", body: formData, isFormData: true });
     showToast("Profile section updated", "success");
-    forms.home.reset();
-    forms.about.reset();
-    forms.contact.reset();
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to update profile", "error");
@@ -622,6 +621,7 @@ function editSkillCategory(item) {
 }
 
 async function deleteItem(resource, id, callback) {
+  if (!confirm("Are you sure you want to delete this record? This action cannot be undone.")) return;
   try {
     await apiRequest(`/${resource}/${id}`, { method: "DELETE" });
     showToast("Record deleted", "success");
