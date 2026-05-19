@@ -6,7 +6,8 @@ const CertificationSchema = new mongoose.Schema(
     issuer: { type: String, required: true, trim: true },
     certificateFileUrl: { type: String, default: "" },
     skillsGained: [{ type: String, trim: true }],
-    completionDate: { type: String, required: true, trim: true }
+    completionDate: { type: String, required: true, trim: true },
+    order: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

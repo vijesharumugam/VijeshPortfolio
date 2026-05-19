@@ -1,5 +1,6 @@
 const Experience = require("../models/Experience");
 const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
+const asyncHandler = require("../utils/asyncHandler");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -7,12 +8,12 @@ const normalizeList = (input) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const getExperiences = async (req, res) => {
+const getExperiences = asyncHandler(async (req, res) => {
   const experiences = await Experience.find().sort({ order: 1, createdAt: -1 });
   res.json(experiences);
-};
+});
 
-const createExperience = async (req, res) => {
+const createExperience = asyncHandler(async (req, res) => {
   const uploadedLogo = req.file
     ? await uploadBufferToCloudinary(req.file, "experience")
     : null;
@@ -29,9 +30,14 @@ const createExperience = async (req, res) => {
   });
 
   res.status(201).json(experience);
-};
+});
 
-const updateExperience = async (req, res) => {
+const updateExperience = asyncHandler(async (req, res) => {
+  const existing = await Experience.findById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ message: "Experience record not found" });
+  }
+
   const payload = {
     companyName: req.body.companyName,
     role: req.body.role,
@@ -53,12 +59,17 @@ const updateExperience = async (req, res) => {
   });
 
   res.json(experience);
-};
+});
 
-const deleteExperience = async (req, res) => {
+const deleteExperience = asyncHandler(async (req, res) => {
+  const existing = await Experience.findById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ message: "Experience record not found" });
+  }
+
   await Experience.findByIdAndDelete(req.params.id);
   res.json({ message: "Experience deleted" });
-};
+});
 
 module.exports = {
   getExperiences,

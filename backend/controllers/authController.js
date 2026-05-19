@@ -1,12 +1,13 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const asyncHandler = require("../utils/asyncHandler");
 
 const signToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "12h"
   });
 
-const loginAdmin = async (req, res) => {
+const loginAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -33,10 +34,10 @@ const loginAdmin = async (req, res) => {
     token,
     admin: { username: adminUsername, role: "admin" }
   });
-};
+});
 
-const getSession = (req, res) => {
+const getSession = asyncHandler(async (req, res) => {
   return res.json({ admin: req.admin });
-};
+});
 
 module.exports = { loginAdmin, getSession };

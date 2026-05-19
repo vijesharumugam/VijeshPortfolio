@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTheme();
   setupNavigation();
   setupModal();
+  setupCertModal();
   setupRevealAnimations();
   setupContactForm();
   loadPortfolio();
@@ -58,6 +59,11 @@ function cacheDom() {
     themeToggle: document.getElementById("themeToggle"),
     contactForm: document.getElementById("contactForm"),
     toastContainer: document.getElementById("toastContainer"),
+    certModal: document.getElementById("certModal"),
+    certModalClose: document.getElementById("certModalClose"),
+    certViewer: document.getElementById("certViewer"),
+    certViewerMeta: document.getElementById("certViewerMeta"),
+    certViewerLink: document.getElementById("certViewerLink"),
     projectModal: document.getElementById("projectModal"),
     modalClose: document.getElementById("modalClose"),
     modalImage: document.getElementById("modalImage"),
@@ -318,12 +324,20 @@ function renderProjects() {
 
 function renderCertifications() {
   dom.certificationGrid.innerHTML = state.certifications
-    .map(
-      (certification) => `
+    .map((certification) => {
+      const fileUrl = toAbsoluteUrl(certification.certificateFileUrl);
+      const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
+      const hasFile = Boolean(certification.certificateFileUrl);
+      const previewSrc = isPdf
+        ? toAbsoluteUrl("/uploads/defaults/certificate-sample.svg")
+        : (hasFile ? fileUrl : toAbsoluteUrl("/uploads/defaults/certificate-sample.svg"));
+
+      return `
         <article class="cert-card glass" data-reveal>
-          <div class="cert-preview">
+          <div class="cert-preview ${hasFile && !isPdf ? "cert-preview-clickable" : ""}" ${hasFile && !isPdf ? `data-cert-view="${escapeHtml(certification._id)}"` : ""}>
+            ${isPdf && hasFile ? `<span class="cert-pdf-badge">PDF</span>` : ""}
             <img
-              src="${escapeHtml(filePreview(certification.certificateFileUrl))}"
+              src="${escapeHtml(previewSrc)}"
               alt="${escapeHtml(certification.title)} certificate"
             />
           </div>
@@ -332,12 +346,24 @@ function renderCertifications() {
             <h3>${escapeHtml(certification.title)}</h3>
             <p>${formatDate(certification.completionDate)}</p>
             <div class="chip-list">${renderChips(certification.skillsGained || [])}</div>
-            <a class="btn btn-secondary" href="${escapeHtml(toAbsoluteUrl(certification.certificateFileUrl))}" target="_blank" rel="noopener">View Certificate</a>
+            ${hasFile
+              ? isPdf
+                ? `<a class="btn btn-secondary" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">View PDF Certificate</a>`
+                : `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
+              : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
+            }
           </div>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
+
+  dom.certificationGrid.querySelectorAll("[data-cert-view]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const cert = state.certifications.find((c) => c._id === el.dataset.certView);
+      if (cert) openCertModal(cert);
+    });
+  });
 }
 
 function renderSkills() {
@@ -508,8 +534,46 @@ function setupModal() {
   dom.carouselPrev.addEventListener("click", () => changeProjectImage(-1));
   dom.carouselNext.addEventListener("click", () => changeProjectImage(1));
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeProjectModal();
+    if (event.key === "Escape") {
+      closeProjectModal();
+      closeCertModal();
+    }
   });
+}
+
+function setupCertModal() {
+  dom.certModalClose.addEventListener("click", closeCertModal);
+  dom.certModal.addEventListener("click", (event) => {
+    if (event.target === dom.certModal) closeCertModal();
+  });
+}
+
+function openCertModal(cert) {
+  const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
+
+  dom.certViewer.innerHTML = `
+    <img
+      src="${escapeHtml(fileUrl)}"
+      alt="${escapeHtml(cert.title)} certificate"
+      class="cert-full-image"
+    />
+  `;
+
+  dom.certViewerMeta.innerHTML = `
+    <p class="cert-issuer">${escapeHtml(cert.issuer)}</p>
+    <h3>${escapeHtml(cert.title)}</h3>
+    <p>${formatDate(cert.completionDate)}</p>
+  `;
+
+  dom.certViewerLink.href = fileUrl;
+  dom.certModal.classList.add("open");
+  document.body.classList.add("modal-open");
+}
+
+function closeCertModal() {
+  dom.certModal.classList.remove("open");
+  document.body.classList.remove("modal-open");
+  dom.certViewer.innerHTML = "";
 }
 
 function openProjectModal(projectId) {
@@ -619,9 +683,12 @@ function iconSymbol(iconName) {
 
 function filePreview(filePath) {
   if (!filePath) return toAbsoluteUrl("/uploads/defaults/certificate-sample.svg");
-  return filePath.endsWith(".pdf")
-    ? toAbsoluteUrl("/uploads/defaults/certificate-sample.svg")
-    : toAbsoluteUrl(filePath);
+  const url = toAbsoluteUrl(filePath);
+  // PDFs and raw Cloudinary uploads show a certificate placeholder thumbnail
+  if (filePath.endsWith(".pdf") || filePath.includes("/raw/upload/")) {
+    return toAbsoluteUrl("/uploads/defaults/certificate-sample.svg");
+  }
+  return url;
 }
 
 function buildResumeDownloadUrl(path, fullName) {

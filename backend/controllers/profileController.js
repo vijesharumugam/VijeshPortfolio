@@ -1,5 +1,6 @@
 const Profile = require("../models/Profile");
 const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
+const asyncHandler = require("../utils/asyncHandler");
 
 const normalizeList = (input) => {
   if (Array.isArray(input)) {
@@ -28,13 +29,17 @@ const parseJsonArray = (value, fallback = []) => {
   }
 };
 
-const getProfile = async (req, res) => {
+const getProfile = asyncHandler(async (req, res) => {
   const profile = await Profile.findOne({ singletonKey: "default" });
+  if (!profile) {
+    return res.status(404).json({ message: "Profile not found. Please seed the database first." });
+  }
   res.json(profile);
-};
+});
 
-const updateProfile = async (req, res) => {
+const updateProfile = asyncHandler(async (req, res) => {
   const currentProfile = await Profile.findOne({ singletonKey: "default" });
+
   const payload = {
     brandName: req.body.brandName,
     fullName: req.body.fullName,
@@ -61,27 +66,31 @@ const updateProfile = async (req, res) => {
   };
 
   if (req.files?.profileImage?.[0]) {
-    const uploadedProfileImage = await uploadBufferToCloudinary(req.files.profileImage[0], "profile");
-    payload.profileImageUrl = uploadedProfileImage.secure_url;
+    const uploaded = await uploadBufferToCloudinary(req.files.profileImage[0], "profile");
+    payload.profileImageUrl = uploaded.secure_url;
   }
 
   if (req.files?.aboutImage?.[0]) {
-    const uploadedAboutImage = await uploadBufferToCloudinary(req.files.aboutImage[0], "profile");
-    payload.aboutImageUrl = uploadedAboutImage.secure_url;
+    const uploaded = await uploadBufferToCloudinary(req.files.aboutImage[0], "profile");
+    payload.aboutImageUrl = uploaded.secure_url;
   }
 
   if (req.files?.resume?.[0]) {
-    const uploadedResume = await uploadBufferToCloudinary(req.files.resume[0], "profile");
-    payload.resumeUrl = uploadedResume.secure_url;
+    const uploaded = await uploadBufferToCloudinary(req.files.resume[0], "profile");
+    payload.resumeUrl = uploaded.secure_url;
   }
 
   const profile = await Profile.findOneAndUpdate(
     { singletonKey: "default" },
     { $set: payload },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true, upsert: false }
   );
 
+  if (!profile) {
+    return res.status(404).json({ message: "Profile record not found. Run the server once to seed initial data." });
+  }
+
   res.json(profile);
-};
+});
 
 module.exports = { getProfile, updateProfile };

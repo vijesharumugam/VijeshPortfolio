@@ -1,4 +1,5 @@
 const SkillCategory = require("../models/SkillCategory");
+const asyncHandler = require("../utils/asyncHandler");
 
 const parseSkills = (value) => {
   if (!value) return [];
@@ -12,12 +13,12 @@ const parseSkills = (value) => {
   }
 };
 
-const getSkillCategories = async (req, res) => {
+const getSkillCategories = asyncHandler(async (req, res) => {
   const categories = await SkillCategory.find().sort({ order: 1, createdAt: -1 });
   res.json(categories);
-};
+});
 
-const createSkillCategory = async (req, res) => {
+const createSkillCategory = asyncHandler(async (req, res) => {
   const category = await SkillCategory.create({
     category: req.body.category,
     skills: parseSkills(req.body.skills),
@@ -25,9 +26,14 @@ const createSkillCategory = async (req, res) => {
   });
 
   res.status(201).json(category);
-};
+});
 
-const updateSkillCategory = async (req, res) => {
+const updateSkillCategory = asyncHandler(async (req, res) => {
+  const existing = await SkillCategory.findById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ message: "Skill category not found" });
+  }
+
   const category = await SkillCategory.findByIdAndUpdate(
     req.params.id,
     {
@@ -39,12 +45,17 @@ const updateSkillCategory = async (req, res) => {
   );
 
   res.json(category);
-};
+});
 
-const deleteSkillCategory = async (req, res) => {
+const deleteSkillCategory = asyncHandler(async (req, res) => {
+  const existing = await SkillCategory.findById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ message: "Skill category not found" });
+  }
+
   await SkillCategory.findByIdAndDelete(req.params.id);
   res.json({ message: "Skill category deleted" });
-};
+});
 
 module.exports = {
   getSkillCategories,

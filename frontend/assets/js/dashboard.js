@@ -605,7 +605,8 @@ function editCertification(item) {
     title: item.title,
     issuer: item.issuer,
     completionDate: item.completionDate,
-    skillsGained: item.skillsGained.join(", ")
+    skillsGained: item.skillsGained.join(", "),
+    order: item.order ?? 0
   });
   scrollToSection("section-certifications");
 }
