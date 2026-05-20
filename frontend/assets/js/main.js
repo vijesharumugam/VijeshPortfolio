@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function cacheDom() {
   Object.assign(dom, {
+    maintenanceOverlay: document.getElementById("maintenanceOverlay"),
     pageLoader: document.getElementById("pageLoader"),
     brandName: document.getElementById("brandName"),
     heroName: document.getElementById("heroName"),
@@ -94,6 +95,14 @@ async function loadPortfolio() {
     ]);
 
     state.profile = profile;
+    
+    if (state.profile?.maintenanceMode) {
+      dom.maintenanceOverlay.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      hideLoader();
+      return;
+    }
+
     state.experiences = experiences || [];
     state.education = education || [];
     state.projects = projects || [];

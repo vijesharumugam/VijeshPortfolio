@@ -1,5 +1,5 @@
 const express = require("express");
-const { getProfile, updateProfile } = require("../controllers/profileController");
+const { getProfile, updateProfile, toggleMaintenance } = require("../controllers/profileController");
 const { protect } = require("../middleware/authMiddleware");
 const { upload, assignUploadFolder } = require("../middleware/uploadMiddleware");
 
@@ -17,5 +17,6 @@ router.put(
   ]),
   updateProfile
 );
+router.put("/maintenance", protect, toggleMaintenance);
 
 module.exports = router;

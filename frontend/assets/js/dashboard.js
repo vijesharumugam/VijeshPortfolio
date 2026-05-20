@@ -15,6 +15,7 @@ const state = {
 const forms = {};
 const authToken = localStorage.getItem("portfolioAdminToken");
 const themeToggle = document.getElementById("adminThemeToggle");
+const maintenanceToggle = document.getElementById("maintenanceToggle");
 const saveLoadingOverlay = document.getElementById("saveLoadingOverlay");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingText = document.getElementById("loadingText");
@@ -28,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupNavigation();
   setupResetButtons();
   setupForms();
+  setupMaintenanceToggle();
   renderProjectMediaManager();
   await loadDashboardData();
 });
@@ -151,6 +153,40 @@ function setupForms() {
   forms.project.elements.images.addEventListener("change", handleProjectImageSelection);
 }
 
+function setupMaintenanceToggle() {
+  maintenanceToggle?.addEventListener("click", async () => {
+    if (!state.profile) return;
+    const isCurrentlyOn = state.profile.maintenanceMode;
+    const newStatus = !isCurrentlyOn;
+    
+    maintenanceToggle.disabled = true;
+    maintenanceToggle.textContent = "Updating...";
+    
+    try {
+      const updatedProfile = await apiRequest("/profile/maintenance", {
+        method: "PUT",
+        body: JSON.stringify({ maintenanceMode: newStatus })
+      });
+      state.profile.maintenanceMode = updatedProfile.maintenanceMode;
+      updateMaintenanceToggleUI();
+      showToast(`Maintenance mode turned ${state.profile.maintenanceMode ? 'ON' : 'OFF'}`, "success");
+    } catch (error) {
+      showToast(error.message || "Failed to toggle maintenance mode", "error");
+      updateMaintenanceToggleUI(); // Revert back
+    } finally {
+      maintenanceToggle.disabled = false;
+    }
+  });
+}
+
+function updateMaintenanceToggleUI() {
+  if (!maintenanceToggle || !state.profile) return;
+  maintenanceToggle.textContent = state.profile.maintenanceMode ? "Maintenance: On" : "Maintenance: Off";
+  maintenanceToggle.style.background = state.profile.maintenanceMode ? "var(--accent-warm)" : "var(--surface-strong)";
+  maintenanceToggle.style.color = state.profile.maintenanceMode ? "#000" : "var(--text)";
+  maintenanceToggle.style.borderColor = state.profile.maintenanceMode ? "transparent" : "var(--border)";
+}
+
 async function loadDashboardData() {
   try {
     const [summary, profile, experiences, education, projects, certifications, skills, messages] =
@@ -174,6 +210,7 @@ async function loadDashboardData() {
     state.messages = messages;
 
     populateProfileForms();
+    updateMaintenanceToggleUI();
     renderSummary(summary);
     renderCollections();
     renderCountChips();

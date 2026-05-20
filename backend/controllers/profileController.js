@@ -92,5 +92,15 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   res.json(profile);
 });
+const toggleMaintenance = asyncHandler(async (req, res) => {
+  const { maintenanceMode } = req.body;
+  const profile = await Profile.findOneAndUpdate(
+    { singletonKey: "default" },
+    { $set: { maintenanceMode } },
+    { new: true, runValidators: true }
+  );
+  if (!profile) return res.status(404).json({ message: "Profile not found." });
+  res.json(profile);
+});
 
-module.exports = { getProfile, updateProfile };
+module.exports = { getProfile, updateProfile, toggleMaintenance };

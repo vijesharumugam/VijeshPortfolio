@@ -50,7 +50,8 @@ const ProfileSchema = new mongoose.Schema(
     phone: { type: String, required: true, trim: true },
     location: { type: String, required: true, trim: true },
     contactDescription: { type: String, required: true, trim: true },
-    socialLinks: { type: SocialLinksSchema, default: () => ({}) }
+    socialLinks: { type: SocialLinksSchema, default: () => ({}) },
+    maintenanceMode: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
