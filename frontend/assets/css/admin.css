@@ -435,6 +435,7 @@ body[data-theme="light"] .skill-row {
 .record-list-rail {
   grid-auto-flow: column;
   grid-template-columns: none;
+  grid-template-rows: repeat(2, minmax(0, auto));
   grid-auto-columns: minmax(290px, 1fr);
   overflow-x: auto;
   overflow-y: hidden;
@@ -453,6 +454,10 @@ body[data-theme="light"] .skill-row {
 .record-list-rail .record-card {
   scroll-snap-align: start;
   min-height: 100%;
+}
+
+.record-list-rail {
+  align-items: stretch;
 }
 
 .admin-rail-pagination {
@@ -820,6 +825,7 @@ body[data-theme="light"] .toast {
 
   .record-list-rail {
     grid-auto-columns: minmax(250px, 82vw);
+    grid-template-rows: repeat(2, minmax(0, auto));
   }
 
   .admin-rail-pagination {
