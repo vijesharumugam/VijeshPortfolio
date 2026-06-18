@@ -22,11 +22,18 @@ const loadingText = document.getElementById("loadingText");
 const ADMIN_LOGIN_PATH = "/edit/";
 const skillBuilder = document.getElementById("skillBuilder");
 const addSkillRowButton = document.getElementById("addSkillRowButton");
+const projectListPrev = document.getElementById("projectListPrev");
+const projectListNext = document.getElementById("projectListNext");
+const projectListDots = document.getElementById("projectListDots");
+const certListPrev = document.getElementById("certListPrev");
+const certListNext = document.getElementById("certListNext");
+const certListDots = document.getElementById("certificationListDots");
 const SKILL_LEVEL_OPTIONS = [
   { label: "Beginner", value: "beginner" },
   { label: "Intermediate", value: "intermediate" },
   { label: "Professional", value: "professional" }
 ];
+const railControllers = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupTheme();
@@ -38,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupForms();
   setupSkillBuilder();
   setupMaintenanceToggle();
+  setupAdminRails();
   renderProjectMediaManager();
   await loadDashboardData();
 });
@@ -222,6 +230,8 @@ async function loadDashboardData() {
     renderSummary(summary);
     renderCollections();
     renderCountChips();
+    railControllers.projects?.refresh();
+    railControllers.certifications?.refresh();
   } catch (error) {
     showToast(error.message || "Unable to load dashboard data", "error");
   }
@@ -341,6 +351,8 @@ function renderCollections() {
   });
 
   renderMessages();
+  railControllers.projects?.refresh();
+  railControllers.certifications?.refresh();
 }
 
 function renderCountChips() {
@@ -388,6 +400,95 @@ function renderRecordList(containerId, items, config) {
       config.onDelete(button.dataset.delete);
     });
   });
+}
+
+function setupAdminRails() {
+  railControllers.projects = setupRailControls({
+    grid: document.getElementById("projectList"),
+    prevButton: projectListPrev,
+    nextButton: projectListNext,
+    dotsContainer: projectListDots
+  });
+
+  railControllers.certifications = setupRailControls({
+    grid: document.getElementById("certificationList"),
+    prevButton: certListPrev,
+    nextButton: certListNext,
+    dotsContainer: certListDots
+  });
+}
+
+function setupRailControls({ grid, prevButton, nextButton, dotsContainer }) {
+  if (!grid || !prevButton || !nextButton || !dotsContainer) return null;
+
+  const getMaxScrollLeft = () => Math.max(0, grid.scrollWidth - grid.clientWidth);
+
+  const getPageCount = () => {
+    const clientWidth = Math.max(1, grid.clientWidth);
+    return Math.max(1, Math.ceil(grid.scrollWidth / clientWidth));
+  };
+
+  const getActivePage = () => {
+    const pageCount = getPageCount();
+    const maxScrollLeft = getMaxScrollLeft();
+    if (pageCount <= 1 || maxScrollLeft <= 0) return 0;
+    return Math.min(pageCount - 1, Math.round((grid.scrollLeft / maxScrollLeft) * (pageCount - 1)));
+  };
+
+  const syncControls = () => {
+    const pageCount = getPageCount();
+    const maxScrollLeft = getMaxScrollLeft();
+    const activePage = getActivePage();
+    const atStart = grid.scrollLeft <= 4;
+    const atEnd = grid.scrollLeft >= maxScrollLeft - 4;
+
+    prevButton.disabled = atStart || maxScrollLeft === 0;
+    nextButton.disabled = atEnd || maxScrollLeft === 0;
+
+    if (pageCount <= 1 || maxScrollLeft === 0) {
+      dotsContainer.innerHTML = "";
+      dotsContainer.hidden = true;
+      return;
+    }
+
+    dotsContainer.hidden = false;
+
+    if (dotsContainer.childElementCount !== pageCount) {
+      dotsContainer.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < pageCount; index += 1) {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "rail-dot";
+        dot.setAttribute("aria-label", `Go to page ${index + 1}`);
+        dot.addEventListener("click", () => {
+          const targetScroll = pageCount === 1 ? 0 : maxScrollLeft * (index / (pageCount - 1));
+          grid.scrollTo({ left: targetScroll, behavior: "smooth" });
+        });
+        fragment.appendChild(dot);
+      }
+      dotsContainer.appendChild(fragment);
+    }
+
+    Array.from(dotsContainer.children).forEach((dot, index) => {
+      dot.classList.toggle("active", index === activePage);
+    });
+  };
+
+  const scrollRail = (direction) => {
+    const step = Math.max(grid.clientWidth * 0.9, 320);
+    grid.scrollBy({ left: direction * step, behavior: "smooth" });
+  };
+
+  prevButton.addEventListener("click", () => scrollRail(-1));
+  nextButton.addEventListener("click", () => scrollRail(1));
+  grid.addEventListener("scroll", syncControls, { passive: true });
+  window.addEventListener("resize", syncControls);
+  window.requestAnimationFrame(syncControls);
+
+  return {
+    refresh: syncControls
+  };
 }
 
 function renderMessages() {

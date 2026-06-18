@@ -378,6 +378,96 @@ body[data-theme="light"] .skill-row {
   gap: 0.9rem;
 }
 
+.record-rail-shell {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.record-rail-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.rail-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.rail-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.rail-dot.active {
+  width: 18px;
+  background: var(--accent);
+}
+
+.rail-nav {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.rail-nav svg {
+  width: 17px;
+  height: 17px;
+}
+
+.rail-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.record-list-rail {
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  grid-auto-columns: minmax(290px, 1fr);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0.2rem 0.1rem 0.6rem;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.record-list-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.record-list-rail .record-card {
+  scroll-snap-align: start;
+  min-height: 100%;
+}
+
+.admin-rail-pagination {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.admin-rail-pagination .rail-dot {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-rail-pagination .rail-dot.active {
+  background: var(--accent);
+}
+
 .media-manager {
   display: grid;
   gap: 1rem;
@@ -429,6 +519,15 @@ body[data-theme="light"] .skill-row {
   border-radius: 1.2rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.record-list-rail .record-card {
+  flex-direction: column;
+}
+
+.record-list-rail .record-actions {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .record-card.compact {
@@ -712,5 +811,18 @@ body[data-theme="light"] .toast {
   .btn,
   .btn-small {
     width: 100%;
+  }
+
+  .record-rail-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .record-list-rail {
+    grid-auto-columns: minmax(250px, 82vw);
+  }
+
+  .admin-rail-pagination {
+    justify-content: flex-start;
   }
 }

@@ -250,8 +250,25 @@
               </form>
             </section>
             <section class="panel-card">
-              <div class="panel-head"><h2>Existing Projects</h2></div>
-              <div id="projectList" class="record-list"></div>
+              <div class="panel-head">
+                <h2>Existing Projects</h2>
+                <div class="record-rail-controls" aria-label="Project list controls">
+                  <button class="rail-nav" id="projectListPrev" type="button" aria-label="Scroll projects left">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14.5 5L8.5 12l6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button class="rail-nav" id="projectListNext" type="button" aria-label="Scroll projects right">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9.5 5l6 7-6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="record-rail-shell">
+                <div id="projectList" class="record-list record-list-rail"></div>
+                <div class="rail-pagination admin-rail-pagination" id="projectListDots" aria-label="Project list page indicators"></div>
+              </div>
             </section>
           </div>
         </section>
@@ -288,8 +305,25 @@
               </form>
             </section>
             <section class="panel-card">
-              <div class="panel-head"><h2>Existing Certifications</h2></div>
-              <div id="certificationList" class="record-list"></div>
+              <div class="panel-head">
+                <h2>Existing Certifications</h2>
+                <div class="record-rail-controls" aria-label="Certification list controls">
+                  <button class="rail-nav" id="certListPrev" type="button" aria-label="Scroll certifications left">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14.5 5L8.5 12l6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button class="rail-nav" id="certListNext" type="button" aria-label="Scroll certifications right">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9.5 5l6 7-6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="record-rail-shell">
+                <div id="certificationList" class="record-list record-list-rail"></div>
+                <div class="rail-pagination admin-rail-pagination" id="certificationListDots" aria-label="Certification list page indicators"></div>
+              </div>
             </section>
           </div>
         </section>
