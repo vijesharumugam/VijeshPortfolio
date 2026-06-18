@@ -348,7 +348,8 @@ window.CERT_PLACEHOLDER_SVG = CERT_PLACEHOLDER_SVG;
 function renderCertifications() {
   dom.certificationGrid.innerHTML = state.certifications
     .map((certification) => {
-      const isPdf = isPdfAsset(certification.certificateFileUrl);
+      const driveId = extractDriveFileId(certification.certificateFileUrl);
+      const isPdf = isPdfAsset(certification.certificateFileUrl) || Boolean(driveId);
       const hasFile = Boolean(certification.certificateFileUrl);
 
       const previewSrc = hasFile ? filePreview(certification.certificateFileUrl) : CERT_PLACEHOLDER_SVG;
@@ -569,16 +570,17 @@ function setupCertModal() {
 
 function openCertModal(cert) {
   const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
-  const isPdf = isPdfAsset(cert.certificateFileUrl);
+  const driveId = extractDriveFileId(cert.certificateFileUrl);
+  const isPdf = isPdfAsset(cert.certificateFileUrl) || Boolean(driveId);
 
   if (isPdf) {
     dom.certViewer.innerHTML = `
-      <embed 
-        src="${escapeHtml(fileUrl)}" 
-        type="application/pdf"
-        class="cert-full-image" 
+      <iframe
+        src="${escapeHtml(getCertificateEmbedUrl(cert.certificateFileUrl, driveId, fileUrl))}"
+        class="cert-full-image"
         style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
-      />
+        title="${escapeHtml(cert.title)} certificate preview"
+      ></iframe>
     `;
   } else {
     dom.certViewer.innerHTML = `
@@ -745,6 +747,10 @@ function iconSymbol(iconName) {
 function filePreview(filePath) {
   if (!filePath) return CERT_PLACEHOLDER_SVG;
   const url = toAbsoluteUrl(filePath);
+  const driveId = extractDriveFileId(filePath);
+  if (driveId) {
+    return getDriveThumbnailUrl(driveId);
+  }
   if (isPdfAsset(filePath)) {
     return isCloudinaryUrl(filePath) ? buildCloudinaryPdfPreviewUrl(url) : CERT_PLACEHOLDER_SVG;
   }
@@ -769,18 +775,37 @@ function normalizeResumeDownloadUrl(value) {
   const url = String(value || "").trim();
   if (!url) return "#contact";
 
-  if (/drive\.google\.com/i.test(url)) {
-    const fileIdMatch =
-      url.match(/\/file\/d\/([^/]+)/i) ||
-      url.match(/[?&]id=([^&]+)/i) ||
-      url.match(/\/d\/([^/]+)/i);
-
-    if (fileIdMatch?.[1]) {
-      return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
-    }
+  const fileId = extractDriveFileId(url);
+  if (fileId) {
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
   }
 
   return url;
+}
+
+function extractDriveFileId(value) {
+  const url = String(value || "").trim();
+  if (!/drive\.google\.com/i.test(url)) return "";
+
+  const fileIdMatch =
+    url.match(/\/file\/d\/([^/]+)/i) ||
+    url.match(/[?&]id=([^&]+)/i) ||
+    url.match(/\/d\/([^/]+)/i);
+
+  return fileIdMatch?.[1] || "";
+}
+
+function getDriveThumbnailUrl(fileId) {
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1200`;
+}
+
+function getDrivePreviewUrl(fileId) {
+  return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
+}
+
+function getCertificateEmbedUrl(value, driveId, fallbackUrl) {
+  if (driveId) return getDrivePreviewUrl(driveId);
+  return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fallbackUrl || toAbsoluteUrl(value))}`;
 }
 
 function isCloudinaryUrl(value) {

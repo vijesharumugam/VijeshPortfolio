@@ -800,6 +800,7 @@ function editCertification(item) {
     title: item.title,
     issuer: item.issuer,
     completionDate: item.completionDate,
+    certificateFileUrl: item.certificateFileUrl,
     skillsGained: item.skillsGained.join(", "),
     order: item.order ?? 0
   });
