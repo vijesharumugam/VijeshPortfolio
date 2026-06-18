@@ -403,7 +403,6 @@ function renderSkills() {
                       <span>${escapeHtml(skill.name)}</span>
                       <strong>${escapeHtml(getSkillLevelLabel(skill.level))}</strong>
                     </div>
-                    <div class="skill-bar"><span style="width:${escapeHtml(String(getSkillLevelPercent(skill.level)))}%"></span></div>
                   </div>
                 `
               )
@@ -727,10 +726,6 @@ function getSkillLevelInfo(level) {
 
 function getSkillLevelLabel(level) {
   return getSkillLevelInfo(level).label;
-}
-
-function getSkillLevelPercent(level) {
-  return getSkillLevelInfo(level).percent;
 }
 
 function iconSymbol(iconName) {

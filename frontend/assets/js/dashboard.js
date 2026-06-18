@@ -156,9 +156,7 @@ function setupForms() {
   forms.experience.addEventListener("submit", (event) => saveCollectionItem(event, "experiences", forms.experience));
   forms.education.addEventListener("submit", (event) => saveCollectionItem(event, "education", forms.education));
   forms.project.addEventListener("submit", saveProject);
-  forms.certification.addEventListener("submit", (event) =>
-    saveCollectionItem(event, "certifications", forms.certification)
-  );
+  forms.certification.addEventListener("submit", saveCertification);
   forms.skill.addEventListener("submit", saveSkillCategory);
   forms.project.elements.images.addEventListener("change", handleProjectImageSelection);
 }
@@ -560,6 +558,37 @@ async function saveProject(event) {
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to save project", "error");
+  } finally {
+    setSavingState(false, "", form);
+  }
+}
+
+async function saveCertification(event) {
+  event.preventDefault();
+  const form = forms.certification;
+  const id = form.elements.id.value;
+
+  const payload = {
+    title: form.elements.title.value,
+    issuer: form.elements.issuer.value,
+    completionDate: form.elements.completionDate.value,
+    order: form.elements.order.value,
+    certificateFileUrl: form.elements.certificateFileUrl.value.trim(),
+    skillsGained: form.elements.skillsGained.value
+  };
+
+  setSavingState(true, "Saving certification...", form);
+  try {
+    await apiRequest(`/certifications${id ? `/${id}` : ""}`, {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(payload)
+    });
+    showToast("Certification saved", "success");
+    form.reset();
+    form.elements.id.value = "";
+    await loadDashboardData();
+  } catch (error) {
+    showToast(error.message || "Unable to save certification", "error");
   } finally {
     setSavingState(false, "", form);
   }
