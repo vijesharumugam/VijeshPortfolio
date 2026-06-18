@@ -153,22 +153,16 @@ function renderProfile() {
   dom.profileImage.alt = `${profile.fullName} profile photo`;
   dom.aboutImage.src = toAbsoluteUrl(profile.aboutImageUrl || profile.profileImageUrl);
   dom.aboutImage.alt = `${profile.fullName} about photo`;
-  if (profile.resumeUrl && profile.resumeUrl.includes("res.cloudinary.com")) {
-    // Cloudinary raw PDF — inject fl_attachment to force browser download
-    dom.resumeButton.href = buildResumeDownloadUrl(profile.resumeUrl, profile.fullName);
-    dom.resumeButton.setAttribute("download", buildResumeFileName(profile.fullName));
+  if (profile.resumeUrl) {
+    dom.resumeButton.href = normalizeResumeDownloadUrl(profile.resumeUrl);
     dom.resumeButton.removeAttribute("target");
-  } else if (profile.resumeUrl) {
-    // Local / backend-hosted file — cross-origin download attribute is ignored,
-    // so open in new tab to let the browser render/download natively
-    dom.resumeButton.href = toAbsoluteUrl(profile.resumeUrl);
-    dom.resumeButton.setAttribute("target", "_blank");
-    dom.resumeButton.setAttribute("rel", "noopener");
+    dom.resumeButton.removeAttribute("rel");
     dom.resumeButton.removeAttribute("download");
   } else {
     dom.resumeButton.href = "#contact";
     dom.resumeButton.removeAttribute("download");
     dom.resumeButton.removeAttribute("target");
+    dom.resumeButton.removeAttribute("rel");
   }
   dom.contactDescription.textContent = profile.contactDescription;
   dom.contactEmail.textContent = profile.email;
@@ -354,25 +348,10 @@ window.CERT_PLACEHOLDER_SVG = CERT_PLACEHOLDER_SVG;
 function renderCertifications() {
   dom.certificationGrid.innerHTML = state.certifications
     .map((certification) => {
-      const fileUrl = toAbsoluteUrl(certification.certificateFileUrl);
-      const isPdf = certification.certificateFileUrl
-        ? (certification.certificateFileUrl.endsWith(".pdf") ||
-           fileUrl.includes("/raw/upload/"))
-        : false;
+      const isPdf = isPdfAsset(certification.certificateFileUrl);
       const hasFile = Boolean(certification.certificateFileUrl);
 
-      let previewSrc = CERT_PLACEHOLDER_SVG;
-      if (hasFile) {
-        if (!isPdf) {
-          previewSrc = fileUrl;
-        } else if (fileUrl.includes("res.cloudinary.com") && fileUrl.includes("/upload/")) {
-          // Force Cloudinary to extract the 1st page of the PDF as a JPG thumbnail
-          previewSrc = fileUrl
-            .replace("/raw/upload/", "/image/upload/")
-            .replace("/upload/", "/upload/pg_1/")
-            .replace(/\.pdf$/i, ".jpg");
-        }
-      }
+      const previewSrc = hasFile ? filePreview(certification.certificateFileUrl) : CERT_PLACEHOLDER_SVG;
 
       return `
         <article class="cert-card glass" data-reveal>
@@ -388,7 +367,6 @@ function renderCertifications() {
             <p class="cert-issuer">${escapeHtml(certification.issuer)}</p>
             <h3>${escapeHtml(certification.title)}</h3>
             <p>${formatDate(certification.completionDate)}</p>
-            <div class="chip-list">${renderChips(certification.skillsGained || [])}</div>
             ${hasFile
               ? `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
               : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
@@ -422,9 +400,9 @@ function renderSkills() {
                   <div class="skill-item">
                     <div class="skill-label">
                       <span>${escapeHtml(skill.name)}</span>
-                      <strong>${escapeHtml(String(skill.level))}%</strong>
+                      <strong>${escapeHtml(getSkillLevelLabel(skill.level))}</strong>
                     </div>
-                    <div class="skill-bar"><span style="width:${escapeHtml(String(skill.level))}%"></span></div>
+                    <div class="skill-bar"><span style="width:${escapeHtml(String(getSkillLevelPercent(skill.level)))}%"></span></div>
                   </div>
                 `
               )
@@ -591,7 +569,7 @@ function setupCertModal() {
 
 function openCertModal(cert) {
   const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
-  const isPdf = fileUrl.endsWith(".pdf") || fileUrl.includes("/raw/upload/");
+  const isPdf = isPdfAsset(cert.certificateFileUrl);
 
   if (isPdf) {
     dom.certViewer.innerHTML = `
@@ -723,6 +701,36 @@ function renderChips(items) {
     .join("");
 }
 
+function getSkillLevelInfo(level) {
+  const value = String(level ?? "").trim().toLowerCase();
+  const presets = [
+    { label: "Beginner", percent: 35 },
+    { label: "Intermediate", percent: 65 },
+    { label: "Professional", percent: 90 }
+  ];
+
+  if (value === "beginner") return presets[0];
+  if (value === "intermediate") return presets[1];
+  if (value === "professional") return presets[2];
+
+  const numeric = Number(level);
+  if (!Number.isNaN(numeric)) {
+    if (numeric < 45) return presets[0];
+    if (numeric < 80) return presets[1];
+    return presets[2];
+  }
+
+  return presets[1];
+}
+
+function getSkillLevelLabel(level) {
+  return getSkillLevelInfo(level).label;
+}
+
+function getSkillLevelPercent(level) {
+  return getSkillLevelInfo(level).percent;
+}
+
 function iconSymbol(iconName) {
   const map = {
     spark: "✦",
@@ -737,21 +745,10 @@ function iconSymbol(iconName) {
 function filePreview(filePath) {
   if (!filePath) return CERT_PLACEHOLDER_SVG;
   const url = toAbsoluteUrl(filePath);
-  if (filePath.endsWith(".pdf") || filePath.includes("/raw/upload/")) {
-    return CERT_PLACEHOLDER_SVG;
+  if (isPdfAsset(filePath)) {
+    return isCloudinaryUrl(filePath) ? buildCloudinaryPdfPreviewUrl(url) : CERT_PLACEHOLDER_SVG;
   }
   return url;
-}
-
-function buildResumeDownloadUrl(path, fullName) {
-  const absoluteUrl = toAbsoluteUrl(path);
-  const filename = buildResumeFileName(fullName);
-
-  if (absoluteUrl.includes("/raw/upload/")) {
-    return absoluteUrl.replace("/raw/upload/", `/raw/upload/fl_attachment:${filename}/`);
-  }
-
-  return absoluteUrl;
 }
 
 function buildResumeFileName(fullName) {
@@ -766,6 +763,56 @@ function buildResumeFileName(fullName) {
 function toAbsoluteUrl(path) {
   if (!path) return `${API_ROOT}/uploads/defaults/profile-avatar.svg`;
   return path.startsWith("http") ? path : `${API_ROOT}${path}`;
+}
+
+function normalizeResumeDownloadUrl(value) {
+  const url = String(value || "").trim();
+  if (!url) return "#contact";
+
+  if (/drive\.google\.com/i.test(url)) {
+    const fileIdMatch =
+      url.match(/\/file\/d\/([^/]+)/i) ||
+      url.match(/[?&]id=([^&]+)/i) ||
+      url.match(/\/d\/([^/]+)/i);
+
+    if (fileIdMatch?.[1]) {
+      return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
+    }
+  }
+
+  return url;
+}
+
+function isCloudinaryUrl(value) {
+  return typeof value === "string" && value.includes("res.cloudinary.com");
+}
+
+function isPdfAsset(value) {
+  return typeof value === "string" && /\.pdf(\?|$)/i.test(value);
+}
+
+function buildCloudinaryAttachmentUrl(url, downloadName) {
+  if (!isCloudinaryUrl(url)) return url;
+
+  const safeName = sanitizeDownloadName(downloadName);
+  const token = safeName ? `fl_attachment:${safeName}` : "fl_attachment";
+  return url.includes("/upload/") ? url.replace("/upload/", `/upload/${token}/`) : url;
+}
+
+function buildCloudinaryPdfPreviewUrl(url) {
+  if (!isCloudinaryUrl(url) || !isPdfAsset(url)) {
+    return url;
+  }
+
+  const imageUrl = url.replace("/raw/upload/", "/image/upload/");
+  return imageUrl.replace("/upload/", "/upload/pg_1/").replace(/\.pdf(\?|$)/i, ".jpg$1");
+}
+
+function sanitizeDownloadName(value) {
+  return String(value || "download.pdf")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w.-]/g, "");
 }
 
 function formatDate(value) {

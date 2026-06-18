@@ -20,6 +20,13 @@ const saveLoadingOverlay = document.getElementById("saveLoadingOverlay");
 const loadingTitle = document.getElementById("loadingTitle");
 const loadingText = document.getElementById("loadingText");
 const ADMIN_LOGIN_PATH = "/edit/";
+const skillBuilder = document.getElementById("skillBuilder");
+const addSkillRowButton = document.getElementById("addSkillRowButton");
+const SKILL_LEVEL_OPTIONS = [
+  { label: "Beginner", value: "beginner" },
+  { label: "Intermediate", value: "intermediate" },
+  { label: "Professional", value: "professional" }
+];
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupTheme();
@@ -29,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupNavigation();
   setupResetButtons();
   setupForms();
+  setupSkillBuilder();
   setupMaintenanceToggle();
   renderProjectMediaManager();
   await loadDashboardData();
@@ -134,6 +142,8 @@ function setupResetButtons() {
       if (existingImages) existingImages.value = "";
       if (button.dataset.reset === "projectForm") {
         resetProjectMediaManager();
+      } else if (button.dataset.reset === "skillForm") {
+        resetSkillBuilder();
       }
     });
   });
@@ -234,7 +244,8 @@ function populateProfileForms() {
     homeSocialEmail: profile.socialLinks?.email || "",
     homeGithub: profile.socialLinks?.github || "",
     homeLinkedin: profile.socialLinks?.linkedin || "",
-    homeLeetcode: profile.socialLinks?.leetcode || ""
+    homeLeetcode: profile.socialLinks?.leetcode || "",
+    resumeUrl: profile.resumeUrl || ""
   });
 
   setFormValues(forms.about, {
@@ -437,6 +448,7 @@ async function saveProfileSection(event) {
   const homeGithub = forms.home.elements.homeGithub.value.trim();
   const homeLinkedin = forms.home.elements.homeLinkedin.value.trim();
   const homeLeetcode = forms.home.elements.homeLeetcode.value.trim();
+  const resumeUrl = forms.home.elements.resumeUrl.value.trim();
   const payload = {
     brandName: forms.home.elements.brandName.value,
     fullName: forms.home.elements.fullName.value,
@@ -457,17 +469,16 @@ async function saveProfileSection(event) {
     github: homeGithub || forms.contact.elements.github.value,
     linkedin: homeLinkedin || forms.contact.elements.linkedin.value,
     leetcode: homeLeetcode || forms.contact.elements.leetcode.value,
-    socialEmail: homeSocialEmail || forms.contact.elements.socialEmail.value
+    socialEmail: homeSocialEmail || forms.contact.elements.socialEmail.value,
+    resumeUrl
   };
 
   Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
 
   const profileImage = forms.home.elements.profileImage.files[0];
-  const resume = forms.home.elements.resume.files[0];
   const aboutImage = forms.about.elements.aboutImage.files[0];
 
   if (profileImage) formData.append("profileImage", profileImage);
-  if (resume) formData.append("resume", resume);
   if (aboutImage) formData.append("aboutImage", aboutImage);
 
   setSavingState(true, "Saving profile and uploading media...", form);
@@ -554,15 +565,162 @@ async function saveProject(event) {
   }
 }
 
+function setupSkillBuilder() {
+  if (!skillBuilder || !addSkillRowButton || !forms.skill) return;
+
+  addSkillRowButton.addEventListener("click", () => {
+    addSkillRow();
+    syncSkillJsonPreview();
+  });
+
+  skillBuilder.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-skill-row]");
+    if (!removeButton) return;
+
+    const row = removeButton.closest("[data-skill-row]");
+    row?.remove();
+    ensureAtLeastOneSkillRow();
+    syncSkillJsonPreview();
+  });
+
+  skillBuilder.addEventListener("input", syncSkillJsonPreview);
+  skillBuilder.addEventListener("change", syncSkillJsonPreview);
+  resetSkillBuilder();
+}
+
+function createSkillRow(skill = {}) {
+  const row = document.createElement("div");
+  row.className = "skill-row";
+  row.dataset.skillRow = "true";
+
+  const options = SKILL_LEVEL_OPTIONS.map(
+    (option) => `<option value="${option.value}">${option.label}</option>`
+  ).join("");
+
+  row.innerHTML = `
+    <label>
+      <span>Skill Name</span>
+      <input type="text" name="skillName" placeholder="Python" value="${escapeHtml(skill.name || "")}" required />
+    </label>
+    <label>
+      <span>Level</span>
+      <select name="skillLevel" required>
+        ${options}
+      </select>
+    </label>
+    <div class="skill-row-actions">
+      <button type="button" class="btn btn-ghost btn-small" data-remove-skill-row>Remove</button>
+    </div>
+  `;
+
+  const select = row.querySelector('select[name="skillLevel"]');
+  select.value = normalizeSkillLevelOptionValue(skill.level);
+  return row;
+}
+
+function addSkillRow(skill = {}) {
+  if (!skillBuilder) return;
+  skillBuilder.appendChild(createSkillRow(skill));
+}
+
+function populateSkillBuilder(skills = []) {
+  if (!skillBuilder || !forms.skill) return;
+
+  skillBuilder.innerHTML = "";
+  if (skills.length) {
+    skills.forEach((skill) => addSkillRow(skill));
+  } else {
+    addSkillRow();
+  }
+  syncSkillJsonPreview();
+}
+
+function resetSkillBuilder() {
+  populateSkillBuilder([]);
+  if (forms.skill?.elements.skills) {
+    forms.skill.elements.skills.value = "[]";
+  }
+}
+
+function ensureAtLeastOneSkillRow() {
+  if (!skillBuilder || skillBuilder.querySelector("[data-skill-row]")) return;
+  addSkillRow();
+}
+
+function collectSkillRows() {
+  if (!skillBuilder) return [];
+
+  const rows = Array.from(skillBuilder.querySelectorAll("[data-skill-row]"));
+  const skills = [];
+
+  for (const row of rows) {
+    const name = row.querySelector('input[name="skillName"]')?.value.trim();
+    const levelValue = row.querySelector('select[name="skillLevel"]')?.value;
+
+    if (!name) {
+      continue;
+    }
+
+    if (!levelValue) {
+      throw new Error("Fill each skill row or remove the empty one");
+    }
+
+    skills.push({
+      name,
+      level: levelValue
+    });
+  }
+
+  return skills;
+}
+
+function syncSkillJsonPreview() {
+  if (!forms.skill?.elements.skills) return;
+
+  try {
+    forms.skill.elements.skills.value = JSON.stringify(collectSkillRows(), null, 2);
+  } catch (error) {
+    forms.skill.elements.skills.value = "";
+  }
+}
+
+function normalizeSkillLevelOptionValue(level) {
+  const raw = String(level ?? "").trim().toLowerCase();
+  const match = SKILL_LEVEL_OPTIONS.find(
+    (option) => String(option.value) === raw || option.label.toLowerCase() === raw
+  );
+
+  if (match) return String(match.value);
+
+  const numeric = Number(level);
+  if (!Number.isNaN(numeric)) {
+    if (numeric < 45) return String(SKILL_LEVEL_OPTIONS[0].value);
+    if (numeric < 80) return String(SKILL_LEVEL_OPTIONS[1].value);
+    return String(SKILL_LEVEL_OPTIONS[2].value);
+  }
+
+  return String(SKILL_LEVEL_OPTIONS[1].value);
+}
+
 async function saveSkillCategory(event) {
   event.preventDefault();
   const form = forms.skill;
   const id = form.elements.id.value;
 
-  if (!isValidJson(form.elements.skills.value)) {
-    showToast("Skills must be a valid JSON array", "error");
+  let skills = [];
+  try {
+    skills = collectSkillRows();
+  } catch (error) {
+    showToast(error.message || "Fill each skill row or remove the empty one", "error");
     return;
   }
+
+  if (!skills.length) {
+    showToast("Add at least one skill", "error");
+    return;
+  }
+
+  form.elements.skills.value = JSON.stringify(skills, null, 2);
 
   const payload = {
     category: form.elements.category.value,
@@ -579,6 +737,7 @@ async function saveSkillCategory(event) {
     showToast("Skill category saved", "success");
     form.reset();
     form.elements.id.value = "";
+    resetSkillBuilder();
     await loadDashboardData();
   } catch (error) {
     showToast(error.message || "Unable to save skill category", "error");
@@ -652,8 +811,8 @@ function editSkillCategory(item) {
     id: item._id,
     category: item.category,
     order: item.order,
-    skills: JSON.stringify(item.skills, null, 2)
   });
+  populateSkillBuilder(item.skills || []);
   scrollToSection("section-skills");
 }
 

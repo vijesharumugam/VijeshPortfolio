@@ -1,5 +1,7 @@
 const SkillCategory = require("../models/SkillCategory");
 const asyncHandler = require("../utils/asyncHandler");
+const { isDatabaseConnected } = require("../config/db");
+const { getFallbackSkills } = require("../utils/fallbackData");
 
 const parseSkills = (value) => {
   if (!value) return [];
@@ -14,6 +16,10 @@ const parseSkills = (value) => {
 };
 
 const getSkillCategories = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json(getFallbackSkills());
+  }
+
   const categories = await SkillCategory.find().sort({ order: 1, createdAt: -1 });
   res.json(categories);
 });

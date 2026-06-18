@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const SkillItemSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    level: { type: Number, min: 0, max: 100, default: 75 }
+    level: { type: String, enum: ["beginner", "intermediate", "professional"], default: "intermediate" }
   },
   { _id: false }
 );

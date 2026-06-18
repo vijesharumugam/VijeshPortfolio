@@ -100,7 +100,14 @@
               <label><span>LinkedIn</span><input type="url" name="homeLinkedin" /></label>
               <label><span>LeetCode</span><input type="url" name="homeLeetcode" /></label>
               <label><span>Profile Photo</span><input type="file" name="profileImage" accept="image/*" /></label>
-              <label><span>Resume PDF</span><input type="file" name="resume" accept=".pdf" /></label>
+              <label class="full">
+                <span>Resume Google Drive Link</span>
+                <input
+                  type="url"
+                  name="resumeUrl"
+                  placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
+                />
+              </label>
               <div class="full actions-row">
                 <button type="submit" class="btn btn-primary">Save Home</button>
               </div>
@@ -295,13 +302,22 @@
                 <label><span>Category</span><input type="text" name="category" required /></label>
                 <label><span>Display Order</span><input type="number" name="order" min="0" /></label>
                 <label class="full">
-                  <span>Skills JSON</span>
+                  <span>Skills</span>
+                  <div class="skill-builder" id="skillBuilder"></div>
+                </label>
+                <label class="full">
+                  <span>Generated JSON Preview</span>
                   <textarea
                     name="skills"
                     rows="8"
-                    placeholder='[{"name":"Python","level":90},{"name":"SQL","level":80}]'
+                    readonly
+                    placeholder="Generated automatically from the dropdown rows below"
                   ></textarea>
+                  <small class="hint">Use the rows above to add each skill name and proficiency level. This JSON updates automatically.</small>
                 </label>
+                <div class="full actions-row">
+                  <button type="button" class="btn btn-ghost" id="addSkillRowButton">Add Skill Row</button>
+                </div>
                 <div class="full actions-row">
                   <button type="submit" class="btn btn-primary">Save Skill Category</button>
                   <button type="button" class="btn btn-ghost" data-reset="skillForm">Clear</button>

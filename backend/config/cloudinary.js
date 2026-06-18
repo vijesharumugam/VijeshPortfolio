@@ -1,18 +1,31 @@
 const { v2: cloudinary } = require("cloudinary");
 
+const readCloudinaryEnv = () => ({
+  cloudName: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
+  apiKey: (process.env.CLOUDINARY_API_KEY || "").trim(),
+  apiSecret: (process.env.CLOUDINARY_API_SECRET || "").trim()
+});
+
 const isCloudinaryConfigured = () =>
-  Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-  );
+  Boolean(Object.values(readCloudinaryEnv()).every(Boolean));
 
-if (isCloudinaryConfigured()) {
+const configureCloudinary = () => {
+  if (!isCloudinaryConfigured()) {
+    return false;
+  }
+
+  const { cloudName, apiKey, apiSecret } = readCloudinaryEnv();
+
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    secure: true
   });
-}
 
-module.exports = { cloudinary, isCloudinaryConfigured };
+  return true;
+};
+
+configureCloudinary();
+
+module.exports = { cloudinary, isCloudinaryConfigured, configureCloudinary };

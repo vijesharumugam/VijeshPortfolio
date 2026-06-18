@@ -12,8 +12,7 @@ router.put(
   assignUploadFolder("profile"),
   upload.fields([
     { name: "profileImage", maxCount: 1 },
-    { name: "aboutImage", maxCount: 1 },
-    { name: "resume", maxCount: 1 }
+    { name: "aboutImage", maxCount: 1 }
   ]),
   updateProfile
 );

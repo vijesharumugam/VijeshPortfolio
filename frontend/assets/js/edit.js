@@ -5,7 +5,7 @@ const toastContainer = document.getElementById("toastContainer");
 const apiRootLabel = document.getElementById("apiRootLabel");
 const themeToggle = document.getElementById("adminThemeToggle");
 const ADMIN_LOGIN_PATH = "/edit/";
-const ADMIN_DASHBOARD_PATH = "/edit/dashboard/";
+const ADMIN_DASHBOARD_PATH = "/edit/dashboard/index.html";
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTheme();

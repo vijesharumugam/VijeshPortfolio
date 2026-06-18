@@ -1,7 +1,8 @@
 const Profile = require("../models/Profile");
-const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
-const { cloudinary } = require("../config/cloudinary");
+const { uploadBufferToCloudinary, deleteCloudinaryAsset } = require("../utils/cloudinaryUpload");
 const asyncHandler = require("../utils/asyncHandler");
+const { isDatabaseConnected } = require("../config/db");
+const { getFallbackProfile } = require("../utils/fallbackData");
 
 const normalizeList = (input) => {
   if (Array.isArray(input)) {
@@ -18,32 +19,6 @@ const normalizeList = (input) => {
   return [];
 };
 
-const extractCloudinaryPublicId = (url) => {
-  if (!url || !url.includes("res.cloudinary.com")) return null;
-  try {
-    const parts = url.split("/upload/");
-    if (parts.length < 2) return null;
-    const afterUpload = parts[1].replace(/^v\d+\//, "");
-    const isRaw = url.includes("/raw/upload/");
-    return isRaw ? afterUpload : afterUpload.replace(/\.[^/.]+$/, "");
-  } catch {
-    return null;
-  }
-};
-
-const cleanupCloudinaryAsset = async (url) => {
-  const publicId = extractCloudinaryPublicId(url);
-  if (!publicId) return;
-  const isRaw = url.includes("/raw/upload/");
-  try {
-    await cloudinary.uploader.destroy(publicId, {
-      resource_type: isRaw ? "raw" : "image"
-    });
-  } catch (err) {
-    console.warn(`Cloudinary cleanup failed for ${publicId}:`, err.message);
-  }
-};
-
 const parseJsonArray = (value, fallback = []) => {
   if (!value) return fallback;
   if (Array.isArray(value)) return value;
@@ -57,6 +32,10 @@ const parseJsonArray = (value, fallback = []) => {
 };
 
 const getProfile = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json(getFallbackProfile());
+  }
+
   const profile = await Profile.findOne({ singletonKey: "default" });
   if (!profile) {
     return res.status(404).json({ message: "Profile not found. Please seed the database first." });
@@ -84,6 +63,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     phone: req.body.phone,
     location: req.body.location,
     contactDescription: req.body.contactDescription,
+    resumeUrl: String(req.body.resumeUrl || "").trim(),
     socialLinks: {
       github: req.body.github || "",
       linkedin: req.body.linkedin || "",
@@ -94,7 +74,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   if (req.files?.profileImage?.[0]) {
     if (currentProfile?.profileImageUrl) {
-      await cleanupCloudinaryAsset(currentProfile.profileImageUrl);
+      await deleteCloudinaryAsset(currentProfile.profileImageUrl);
     }
     const uploaded = await uploadBufferToCloudinary(req.files.profileImage[0], "profile");
     payload.profileImageUrl = uploaded.secure_url;
@@ -102,18 +82,10 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   if (req.files?.aboutImage?.[0]) {
     if (currentProfile?.aboutImageUrl) {
-      await cleanupCloudinaryAsset(currentProfile.aboutImageUrl);
+      await deleteCloudinaryAsset(currentProfile.aboutImageUrl);
     }
     const uploaded = await uploadBufferToCloudinary(req.files.aboutImage[0], "profile");
     payload.aboutImageUrl = uploaded.secure_url;
-  }
-
-  if (req.files?.resume?.[0]) {
-    if (currentProfile?.resumeUrl) {
-      await cleanupCloudinaryAsset(currentProfile.resumeUrl);
-    }
-    const uploaded = await uploadBufferToCloudinary(req.files.resume[0], "profile");
-    payload.resumeUrl = uploaded.secure_url;
   }
 
   const profile = await Profile.findOneAndUpdate(

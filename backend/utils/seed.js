@@ -283,3 +283,9 @@ const seedDefaultData = async () => {
 };
 
 module.exports = seedDefaultData;
+module.exports.seedProfile = seedProfile;
+module.exports.seedExperiences = seedExperiences;
+module.exports.seedEducation = seedEducation;
+module.exports.seedProjects = seedProjects;
+module.exports.seedCertifications = seedCertifications;
+module.exports.seedSkills = seedSkills;

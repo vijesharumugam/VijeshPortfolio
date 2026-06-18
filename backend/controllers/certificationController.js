@@ -1,7 +1,8 @@
 const Certification = require("../models/Certification");
-const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
-const { cloudinary } = require("../config/cloudinary");
+const { uploadBufferToCloudinary, deleteCloudinaryAsset } = require("../utils/cloudinaryUpload");
 const asyncHandler = require("../utils/asyncHandler");
+const { isDatabaseConnected } = require("../config/db");
+const { getFallbackCertifications } = require("../utils/fallbackData");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -9,40 +10,11 @@ const normalizeList = (input) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-/**
- * Extracts the Cloudinary public_id from a Cloudinary URL.
- * Returns null for non-Cloudinary URLs (local /uploads/ paths).
- */
-const extractCloudinaryPublicId = (url) => {
-  if (!url || !url.includes("res.cloudinary.com")) return null;
-
-  try {
-    const parts = url.split("/upload/");
-    if (parts.length < 2) return null;
-
-    const afterUpload = parts[1].replace(/^v\d+\//, "");
-    const isRaw = url.includes("/raw/upload/");
-    return isRaw ? afterUpload : afterUpload.replace(/\.[^/.]+$/, "");
-  } catch {
-    return null;
-  }
-};
-
-const cleanupCloudinaryAsset = async (url) => {
-  const publicId = extractCloudinaryPublicId(url);
-  if (!publicId) return;
-
-  const isRaw = url.includes("/raw/upload/");
-  try {
-    await cloudinary.uploader.destroy(publicId, {
-      resource_type: isRaw ? "raw" : "image"
-    });
-  } catch (err) {
-    console.warn(`Cloudinary cleanup failed for ${publicId}:`, err.message);
-  }
-};
-
 const getCertifications = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json(getFallbackCertifications());
+  }
+
   const certifications = await Certification.find().sort({ order: 1, completionDate: -1, createdAt: -1 });
   res.json(certifications);
 });
@@ -81,7 +53,7 @@ const updateCertification = asyncHandler(async (req, res) => {
   if (req.file) {
     // Clean up the old Cloudinary asset before uploading the new one
     if (existing.certificateFileUrl) {
-      await cleanupCloudinaryAsset(existing.certificateFileUrl);
+      await deleteCloudinaryAsset(existing.certificateFileUrl);
     }
     const uploadedCertificate = await uploadBufferToCloudinary(req.file, "certifications");
     payload.certificateFileUrl = uploadedCertificate.secure_url;
@@ -103,7 +75,7 @@ const deleteCertification = asyncHandler(async (req, res) => {
 
   // Clean up the Cloudinary asset before removing the DB record
   if (existing.certificateFileUrl) {
-    await cleanupCloudinaryAsset(existing.certificateFileUrl);
+    await deleteCloudinaryAsset(existing.certificateFileUrl);
   }
 
   await Certification.findByIdAndDelete(req.params.id);

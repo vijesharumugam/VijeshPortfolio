@@ -5,8 +5,20 @@ const Project = require("../models/Project");
 const Certification = require("../models/Certification");
 const SkillCategory = require("../models/SkillCategory");
 const asyncHandler = require("../utils/asyncHandler");
+const { isDatabaseConnected } = require("../config/db");
+const {
+  getFallbackExperiences,
+  getFallbackEducation,
+  getFallbackProjects,
+  getFallbackCertifications,
+  getFallbackSkills
+} = require("../utils/fallbackData");
 
 const getMessages = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json([]);
+  }
+
   const messages = await Message.find().sort({ createdAt: -1 });
   res.json(messages);
 });
@@ -52,6 +64,27 @@ const deleteMessage = asyncHandler(async (req, res) => {
 });
 
 const getDashboardSummary = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    const experiences = getFallbackExperiences().length;
+    const education = getFallbackEducation().length;
+    const projects = getFallbackProjects().length;
+    const certifications = getFallbackCertifications().length;
+    const skills = getFallbackSkills().length;
+
+    return res.json({
+      cards: [
+        { label: "Messages", value: 0 },
+        { label: "Experiences", value: experiences },
+        { label: "Education", value: education },
+        { label: "Projects", value: projects },
+        { label: "Certifications", value: certifications },
+        { label: "Skill Groups", value: skills }
+      ],
+      recentMessages: [],
+      unreadMessages: 0
+    });
+  }
+
   const [messages, unreadMessages, experiences, education, projects, certifications, skills] = await Promise.all([
     Message.countDocuments(),
     Message.countDocuments({ isRead: false }),

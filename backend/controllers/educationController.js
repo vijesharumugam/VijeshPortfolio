@@ -1,7 +1,8 @@
 const Education = require("../models/Education");
-const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
-const { cloudinary } = require("../config/cloudinary");
+const { uploadBufferToCloudinary, deleteCloudinaryAsset } = require("../utils/cloudinaryUpload");
 const asyncHandler = require("../utils/asyncHandler");
+const { isDatabaseConnected } = require("../config/db");
+const { getFallbackEducation } = require("../utils/fallbackData");
 
 const normalizeList = (input) =>
   String(input || "")
@@ -9,33 +10,11 @@ const normalizeList = (input) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const extractCloudinaryPublicId = (url) => {
-  if (!url || !url.includes("res.cloudinary.com")) return null;
-  try {
-    const parts = url.split("/upload/");
-    if (parts.length < 2) return null;
-    const afterUpload = parts[1].replace(/^v\d+\//, "");
-    const isRaw = url.includes("/raw/upload/");
-    return isRaw ? afterUpload : afterUpload.replace(/\.[^/.]+$/, "");
-  } catch {
-    return null;
-  }
-};
-
-const cleanupCloudinaryAsset = async (url) => {
-  const publicId = extractCloudinaryPublicId(url);
-  if (!publicId) return;
-  const isRaw = url.includes("/raw/upload/");
-  try {
-    await cloudinary.uploader.destroy(publicId, {
-      resource_type: isRaw ? "raw" : "image"
-    });
-  } catch (err) {
-    console.warn(`Cloudinary cleanup failed for ${publicId}:`, err.message);
-  }
-};
-
 const getEducation = asyncHandler(async (req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json(getFallbackEducation());
+  }
+
   const education = await Education.find().sort({ order: 1, createdAt: -1 });
   res.json(education);
 });
@@ -77,7 +56,7 @@ const updateEducation = asyncHandler(async (req, res) => {
 
   if (req.file) {
     if (existing.institutionLogoUrl) {
-      await cleanupCloudinaryAsset(existing.institutionLogoUrl);
+      await deleteCloudinaryAsset(existing.institutionLogoUrl);
     }
     const uploadedLogo = await uploadBufferToCloudinary(req.file, "education");
     payload.institutionLogoUrl = uploadedLogo.secure_url;
@@ -98,7 +77,7 @@ const deleteEducation = asyncHandler(async (req, res) => {
   }
 
   if (existing.institutionLogoUrl) {
-    await cleanupCloudinaryAsset(existing.institutionLogoUrl);
+    await deleteCloudinaryAsset(existing.institutionLogoUrl);
   }
   await Education.findByIdAndDelete(req.params.id);
   res.json({ message: "Education deleted" });
