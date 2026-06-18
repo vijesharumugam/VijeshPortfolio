@@ -1,5 +1,6 @@
 const Profile = require("../models/Profile");
 const { uploadBufferToCloudinary } = require("../utils/cloudinaryUpload");
+const { cloudinary } = require("../config/cloudinary");
 const asyncHandler = require("../utils/asyncHandler");
 
 const normalizeList = (input) => {
@@ -15,6 +16,32 @@ const normalizeList = (input) => {
   }
 
   return [];
+};
+
+const extractCloudinaryPublicId = (url) => {
+  if (!url || !url.includes("res.cloudinary.com")) return null;
+  try {
+    const parts = url.split("/upload/");
+    if (parts.length < 2) return null;
+    const afterUpload = parts[1].replace(/^v\d+\//, "");
+    const isRaw = url.includes("/raw/upload/");
+    return isRaw ? afterUpload : afterUpload.replace(/\.[^/.]+$/, "");
+  } catch {
+    return null;
+  }
+};
+
+const cleanupCloudinaryAsset = async (url) => {
+  const publicId = extractCloudinaryPublicId(url);
+  if (!publicId) return;
+  const isRaw = url.includes("/raw/upload/");
+  try {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: isRaw ? "raw" : "image"
+    });
+  } catch (err) {
+    console.warn(`Cloudinary cleanup failed for ${publicId}:`, err.message);
+  }
 };
 
 const parseJsonArray = (value, fallback = []) => {
@@ -66,16 +93,25 @@ const updateProfile = asyncHandler(async (req, res) => {
   };
 
   if (req.files?.profileImage?.[0]) {
+    if (currentProfile?.profileImageUrl) {
+      await cleanupCloudinaryAsset(currentProfile.profileImageUrl);
+    }
     const uploaded = await uploadBufferToCloudinary(req.files.profileImage[0], "profile");
     payload.profileImageUrl = uploaded.secure_url;
   }
 
   if (req.files?.aboutImage?.[0]) {
+    if (currentProfile?.aboutImageUrl) {
+      await cleanupCloudinaryAsset(currentProfile.aboutImageUrl);
+    }
     const uploaded = await uploadBufferToCloudinary(req.files.aboutImage[0], "profile");
     payload.aboutImageUrl = uploaded.secure_url;
   }
 
   if (req.files?.resume?.[0]) {
+    if (currentProfile?.resumeUrl) {
+      await cleanupCloudinaryAsset(currentProfile.resumeUrl);
+    }
     const uploaded = await uploadBufferToCloudinary(req.files.resume[0], "profile");
     payload.resumeUrl = uploaded.secure_url;
   }
