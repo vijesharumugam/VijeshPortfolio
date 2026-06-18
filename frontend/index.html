@@ -161,21 +161,55 @@
 
       <section id="projects" class="section">
         <div class="container">
-          <div class="section-heading" data-reveal>
-            <span class="eyebrow">Projects</span>
-            <h2>Selected work across AI, analytics, and web development</h2>
+          <div class="section-heading project-section-heading" data-reveal>
+            <div>
+              <span class="eyebrow">Projects</span>
+              <h2>Selected work across AI, analytics, and web development</h2>
+            </div>
+            <div class="project-controls" aria-label="Project carousel controls">
+              <button class="carousel-nav project-nav" id="projectPrev" type="button" aria-label="Scroll projects left">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14.5 5L8.5 12l6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="carousel-nav project-nav" id="projectNext" type="button" aria-label="Scroll projects right">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9.5 5l6 7-6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="projects-grid" id="projectsGrid"></div>
+          <div class="project-carousel" aria-label="Project gallery">
+            <div class="projects-grid" id="projectsGrid"></div>
+            <div class="rail-pagination" id="projectRailDots" aria-label="Project page indicators"></div>
+          </div>
         </div>
       </section>
 
       <section id="certifications" class="section">
         <div class="container">
-          <div class="section-heading" data-reveal>
-            <span class="eyebrow">Certifications</span>
-            <h2>Continuous learning backed by verified coursework</h2>
+          <div class="section-heading cert-section-heading" data-reveal>
+            <div>
+              <span class="eyebrow">Certifications</span>
+              <h2>Continuous learning backed by verified coursework</h2>
+            </div>
+            <div class="cert-controls" aria-label="Certification carousel controls">
+              <button class="carousel-nav cert-nav" id="certPrev" type="button" aria-label="Scroll certifications left">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14.5 5L8.5 12l6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="carousel-nav cert-nav" id="certNext" type="button" aria-label="Scroll certifications right">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9.5 5l6 7-6 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="certification-grid" id="certificationGrid"></div>
+          <div class="certification-carousel" aria-label="Certification gallery">
+            <div class="certification-grid" id="certificationGrid"></div>
+            <div class="rail-pagination" id="certRailDots" aria-label="Certification page indicators"></div>
+          </div>
         </div>
       </section>
 

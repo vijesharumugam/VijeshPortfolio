@@ -13,6 +13,7 @@ const state = {
 };
 
 const dom = {};
+const railControllers = {};
 
 document.addEventListener("DOMContentLoaded", () => {
   cacheDom();
@@ -20,6 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupModal();
   setupCertModal();
+  setupCertificationCarousel();
+  setupProjectCarousel();
   setupRevealAnimations();
   setupContactForm();
   loadPortfolio();
@@ -64,6 +67,12 @@ function cacheDom() {
     certModalClose: document.getElementById("certModalClose"),
     certViewer: document.getElementById("certViewer"),
     certViewerMeta: document.getElementById("certViewerMeta"),
+    certCarouselPrev: document.getElementById("certPrev"),
+    certCarouselNext: document.getElementById("certNext"),
+    certRailDots: document.getElementById("certRailDots"),
+    projectRailPrev: document.getElementById("projectPrev"),
+    projectRailNext: document.getElementById("projectNext"),
+    projectRailDots: document.getElementById("projectRailDots"),
     projectModal: document.getElementById("projectModal"),
     modalClose: document.getElementById("modalClose"),
     modalImage: document.getElementById("modalImage"),
@@ -339,6 +348,7 @@ function renderProjects() {
   });
 
   startProjectSlideshows();
+  railControllers.projects?.refresh();
 }
 
 // Inline SVG used as cert placeholder — no cross-origin backend request needed
@@ -349,19 +359,24 @@ function renderCertifications() {
   dom.certificationGrid.innerHTML = state.certifications
     .map((certification) => {
       const driveId = extractDriveFileId(certification.certificateFileUrl);
-      const isPdf = isPdfAsset(certification.certificateFileUrl) || Boolean(driveId);
-      const hasFile = Boolean(certification.certificateFileUrl);
-
-      const previewSrc = hasFile ? filePreview(certification.certificateFileUrl) : CERT_PLACEHOLDER_SVG;
+      const driveFolderId = extractDriveFolderId(certification.certificateFileUrl);
+      const hasFile = Boolean(String(certification.certificateFileUrl || "").trim());
+      const previewSrc = filePreview(certification.certificateFileUrl, certification);
+      const previewFallback = buildCertificatePreviewSvg(
+        certification,
+        driveFolderId ? "Google Drive folder link" : "Google Drive preview unavailable"
+      );
+      const actionLabel = driveFolderId ? "Open Folder" : "View Certificate";
 
       return `
         <article class="cert-card glass" data-reveal>
           <div class="cert-preview cert-preview-clickable" ${hasFile ? `data-cert-view="${escapeHtml(certification._id)}"` : ""}>
-            ${isPdf && hasFile ? `<span class="cert-pdf-badge">PDF</span>` : ""}
+            ${(isPdfAsset(certification.certificateFileUrl) || Boolean(driveId)) && hasFile ? `<span class="cert-pdf-badge">PDF</span>` : ""}
             <img
               src="${escapeHtml(previewSrc)}"
               alt="${escapeHtml(certification.title)} certificate"
-              onerror="this.src=window.CERT_PLACEHOLDER_SVG"
+              data-fallback="${escapeHtml(previewFallback)}"
+              onerror="this.onerror=null;this.src=this.dataset.fallback"
             />
           </div>
           <div class="cert-body">
@@ -369,7 +384,7 @@ function renderCertifications() {
             <h3>${escapeHtml(certification.title)}</h3>
             <p>${formatDate(certification.completionDate)}</p>
             ${hasFile
-              ? `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">View Certificate</button>`
+              ? `<button class="btn btn-secondary" data-cert-view="${escapeHtml(certification._id)}">${escapeHtml(actionLabel)}</button>`
               : `<span class="btn btn-ghost" style="cursor:default;opacity:.5">No File Uploaded</span>`
             }
           </div>
@@ -384,6 +399,9 @@ function renderCertifications() {
       if (cert) openCertModal(cert);
     });
   });
+
+  updateCertificationCarouselState();
+  railControllers.certifications?.refresh();
 }
 
 function renderSkills() {
@@ -567,15 +585,124 @@ function setupCertModal() {
   });
 }
 
-function openCertModal(cert) {
-  const fileUrl = toAbsoluteUrl(cert.certificateFileUrl);
-  const driveId = extractDriveFileId(cert.certificateFileUrl);
-  const isPdf = isPdfAsset(cert.certificateFileUrl) || Boolean(driveId);
+function setupCertificationCarousel() {
+  railControllers.certifications = setupRailControls({
+    grid: dom.certificationGrid,
+    prevButton: dom.certCarouselPrev,
+    nextButton: dom.certCarouselNext,
+    dotsContainer: dom.certRailDots
+  });
+}
 
-  if (isPdf) {
+function updateCertificationCarouselState() {
+  railControllers.certifications?.refresh();
+}
+
+function setupProjectCarousel() {
+  railControllers.projects = setupRailControls({
+    grid: dom.projectsGrid,
+    prevButton: dom.projectRailPrev,
+    nextButton: dom.projectRailNext,
+    dotsContainer: dom.projectRailDots
+  });
+}
+
+function setupRailControls({ grid, prevButton, nextButton, dotsContainer }) {
+  if (!grid || !prevButton || !nextButton || !dotsContainer) return null;
+
+  const getMaxScrollLeft = () => Math.max(0, grid.scrollWidth - grid.clientWidth);
+
+  const getPageCount = () => {
+    const clientWidth = Math.max(1, grid.clientWidth);
+    return Math.max(1, Math.ceil(grid.scrollWidth / clientWidth));
+  };
+
+  const getActivePage = () => {
+    const pageCount = getPageCount();
+    const maxScrollLeft = getMaxScrollLeft();
+    if (pageCount <= 1 || maxScrollLeft <= 0) return 0;
+    return Math.min(pageCount - 1, Math.round((grid.scrollLeft / maxScrollLeft) * (pageCount - 1)));
+  };
+
+  const syncControls = () => {
+    const pageCount = getPageCount();
+    const maxScrollLeft = getMaxScrollLeft();
+    const activePage = getActivePage();
+    const atStart = grid.scrollLeft <= 4;
+    const atEnd = grid.scrollLeft >= maxScrollLeft - 4;
+
+    prevButton.disabled = atStart || maxScrollLeft === 0;
+    nextButton.disabled = atEnd || maxScrollLeft === 0;
+
+    if (pageCount <= 1 || maxScrollLeft === 0) {
+      dotsContainer.innerHTML = "";
+      dotsContainer.hidden = true;
+      return;
+    }
+
+    dotsContainer.hidden = false;
+
+    if (dotsContainer.childElementCount !== pageCount) {
+      dotsContainer.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < pageCount; index += 1) {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "rail-dot";
+        dot.setAttribute("aria-label", `Go to page ${index + 1}`);
+        dot.addEventListener("click", () => {
+          const targetScroll = pageCount === 1 ? 0 : maxScrollLeft * (index / (pageCount - 1));
+          grid.scrollTo({ left: targetScroll, behavior: "smooth" });
+        });
+        fragment.appendChild(dot);
+      }
+      dotsContainer.appendChild(fragment);
+    }
+
+    Array.from(dotsContainer.children).forEach((dot, index) => {
+      dot.classList.toggle("active", index === activePage);
+    });
+  };
+
+  const scrollRail = (direction) => {
+    const step = Math.max(grid.clientWidth * 0.9, 320);
+    grid.scrollBy({ left: direction * step, behavior: "smooth" });
+  };
+
+  prevButton.addEventListener("click", () => scrollRail(-1));
+  nextButton.addEventListener("click", () => scrollRail(1));
+  grid.addEventListener("scroll", syncControls, { passive: true });
+  window.addEventListener("resize", syncControls);
+  window.requestAnimationFrame(syncControls);
+
+  return {
+    refresh: syncControls
+  };
+}
+
+function openCertModal(cert) {
+  const rawValue = String(cert.certificateFileUrl || "").trim();
+  const fileUrl = toAbsoluteUrl(rawValue);
+  const driveId = extractDriveFileId(rawValue);
+  const driveFolderId = extractDriveFolderId(rawValue);
+  const fallbackPreview = buildCertificatePreviewSvg(
+    cert,
+    driveFolderId ? "Google Drive folder link" : "Google Drive preview unavailable"
+  );
+
+  if (driveFolderId) {
     dom.certViewer.innerHTML = `
       <iframe
-        src="${escapeHtml(getCertificateEmbedUrl(cert.certificateFileUrl, driveId, fileUrl))}"
+        src="${escapeHtml(getDriveFolderPreviewUrl(driveFolderId))}"
+        class="cert-full-image"
+        style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
+        title="${escapeHtml(cert.title)} certificate folder preview"
+      ></iframe>
+    `;
+  } else if (driveId || isPdfAsset(rawValue)) {
+    dom.certViewer.innerHTML = `
+      <iframe
+        src="${escapeHtml(getCertificateEmbedUrl(rawValue, driveId, fileUrl))}"
         class="cert-full-image"
         style="width: 100%; height: 65vh; border: none; border-radius: 1.25rem; background: white;"
         title="${escapeHtml(cert.title)} certificate preview"
@@ -587,7 +714,8 @@ function openCertModal(cert) {
         src="${escapeHtml(fileUrl)}"
         alt="${escapeHtml(cert.title)} certificate"
         class="cert-full-image"
-        onerror="this.src=window.CERT_PLACEHOLDER_SVG"
+        data-fallback="${escapeHtml(fallbackPreview)}"
+        onerror="this.onerror=null;this.src=this.dataset.fallback"
       />
     `;
   }
@@ -739,15 +867,19 @@ function iconSymbol(iconName) {
   return map[iconName] || "✦";
 }
 
-function filePreview(filePath) {
-  if (!filePath) return CERT_PLACEHOLDER_SVG;
+function filePreview(filePath, certification = null) {
+  if (!filePath) return certification ? buildCertificatePreviewSvg(certification) : CERT_PLACEHOLDER_SVG;
   const url = toAbsoluteUrl(filePath);
   const driveId = extractDriveFileId(filePath);
+  const driveFolderId = extractDriveFolderId(filePath);
   if (driveId) {
     return getDriveThumbnailUrl(driveId);
   }
+  if (driveFolderId) {
+    return certification ? buildCertificatePreviewSvg(certification, "Google Drive folder link") : CERT_PLACEHOLDER_SVG;
+  }
   if (isPdfAsset(filePath)) {
-    return isCloudinaryUrl(filePath) ? buildCloudinaryPdfPreviewUrl(url) : CERT_PLACEHOLDER_SVG;
+    return isCloudinaryUrl(filePath) ? buildCloudinaryPdfPreviewUrl(url) : (certification ? buildCertificatePreviewSvg(certification) : CERT_PLACEHOLDER_SVG);
   }
   return url;
 }
@@ -790,6 +922,17 @@ function extractDriveFileId(value) {
   return fileIdMatch?.[1] || "";
 }
 
+function extractDriveFolderId(value) {
+  const url = String(value || "").trim();
+  if (!/drive\.google\.com/i.test(url)) return "";
+
+  const folderIdMatch =
+    url.match(/\/folders\/([^/?#]+)/i) ||
+    url.match(/embeddedfolderview\?id=([^&#]+)/i);
+
+  return folderIdMatch?.[1] || "";
+}
+
 function getDriveThumbnailUrl(fileId) {
   return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1200`;
 }
@@ -801,6 +944,36 @@ function getDrivePreviewUrl(fileId) {
 function getCertificateEmbedUrl(value, driveId, fallbackUrl) {
   if (driveId) return getDrivePreviewUrl(driveId);
   return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fallbackUrl || toAbsoluteUrl(value))}`;
+}
+
+function getDriveFolderPreviewUrl(folderId) {
+  return `https://drive.google.com/embeddedfolderview?id=${encodeURIComponent(folderId)}#grid`;
+}
+
+function buildCertificatePreviewSvg(certification, message = "Google Drive preview unavailable") {
+  const title = escapeHtml(certification?.title || "Certificate");
+  const issuer = escapeHtml(certification?.issuer || "Issuer");
+  const date = escapeHtml(formatDate(certification?.completionDate) || "Date pending");
+  const note = escapeHtml(message);
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0d1118" />
+          <stop offset="100%" stop-color="#181e2c" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="560" rx="32" fill="url(#bg)" />
+      <rect x="34" y="34" width="732" height="492" rx="24" fill="#ffffff" opacity=".06" />
+      <text x="400" y="148" text-anchor="middle" fill="#7be0ac" font-size="38" font-family="Arial" font-weight="700">Certificate</text>
+      <text x="400" y="222" text-anchor="middle" fill="#c8d1e4" font-size="20" font-family="Arial">${note}</text>
+      <text x="400" y="300" text-anchor="middle" fill="#ffffff" font-size="30" font-family="Arial" font-weight="700">${title}</text>
+      <text x="400" y="350" text-anchor="middle" fill="#c8d1e4" font-size="18" font-family="Arial">${issuer}</text>
+      <text x="400" y="390" text-anchor="middle" fill="#c8d1e4" font-size="16" font-family="Arial">${date}</text>
+      <line x1="170" y1="436" x2="630" y2="436" stroke="#ffc46b" stroke-width="3" />
+    </svg>
+  `)}`;
 }
 
 function isCloudinaryUrl(value) {
